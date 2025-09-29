@@ -1,194 +1,2352 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nainital Tourism Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <style>
-    body, html { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; }
-    #map { width:100%; height:100%; }
-    .sidebar { position:absolute; top:0; left:0; width:280px; height:100%; background:#fff; overflow-y:auto; box-shadow:2px 0 6px rgba(0,0,0,0.2); z-index:1000; }
-    .sidebar h2 { margin:0; padding:10px; background:#2E7D32; color:white; font-size:18px; }
-    .layer-toggle { margin:10px; }
-    .footer { position:absolute; bottom:0; left:0; width:100%; background:rgba(33,33,33,0.15); backdrop-filter: blur(6px); color:#333; text-align:center; padding:6px; font-size:12px; z-index:1000;}
-    .chatbot-btn { position:absolute; bottom:80px; left:20px; background:#2E7D32; color:white; border-radius:50%; width:55px; height:55px; display:flex; justify-content:center; align-items:center; font-size:24px; cursor:pointer; z-index:1000;}
-    .chatbot-window { position:absolute; bottom:150px; left:20px; width:300px; max-height:400px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); display:none; flex-direction:column; overflow:hidden; z-index:1000;}
-    .chat-header { background:#2E7D32; color:white; padding:10px; font-weight:bold; }
-    .chat-messages { flex:1; overflow-y:auto; padding:10px; font-size:14px; }
-    .chat-input { display:flex; border-top:1px solid #ddd; }
-    .chat-input input { flex:1; border:none; padding:8px; }
-    .chat-input button { background:#2E7D32; color:white; border:none; padding:8px 12px; cursor:pointer; }
-    .popup-title { font-weight:bold; font-size:14px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nainital Smart Tourism Pilot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&family=Open+Sans:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --forest-green: #2E7D32;
+            --himalayan-blue: #1565C0;
+            --sunset-orange: #F57C00;
+            --golden-yellow: #FBC02D;
+            --off-white: #FAFAFA;
+            --light-grey: #EEEEEE;
+            --charcoal: #212121;
+            --light-green: #A5D6A7;
+            --yellow: #FFEB3B;
+            --orange: #FF9800;
+            --red: #D32F2F;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--off-white);
+            color: var(--charcoal);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            position: relative;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--sunset-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .weather-widget {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .weather-widget:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--sunset-orange);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: var(--golden-yellow);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            z-index: 900;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-320px);
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            right: -30px;
+            top: 20px;
+            background: var(--himalayan-blue);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 60px;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--forest-green);
+        }
+
+        .tab-container {
+            display: flex;
+            background: var(--light-grey);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            font-size: 12px;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--himalayan-blue);
+            border-bottom-color: var(--himalayan-blue);
+        }
+
+        .tab:hover {
+            background: rgba(21, 101, 192, 0.1);
+        }
+
+        .tab-content {
+            padding: 20px;
+            flex: 0 0 auto;
+        }
+
+        .filter-group {
+            margin-bottom: 25px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .filter-title {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--charcoal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .layer-item:hover {
+            background: var(--off-white);
+            padding-left: 10px;
+            border-radius: 5px;
+        }
+
+        .layer-checkbox {
+            margin-right: 10px;
+            accent-color: var(--himalayan-blue);
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--light-grey);
+            border-radius: 25px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--himalayan-blue);
+            box-shadow: 0 0 10px rgba(21, 101, 192, 0.2);
+        }
+
+        .itinerary-card {
+            background: linear-gradient(135deg, var(--himalayan-blue), var(--forest-green));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .itinerary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .itinerary-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-controls {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: var(--himalayan-blue);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            background: var(--sunset-orange);
+            color: white;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            max-width: 200px;
+            z-index: 800;
+            transition: all 0.3s ease;
+        }
+
+        .legend.collapsed {
+            transform: translateX(220px);
+        }
+
+        .legend-toggle {
+            position: absolute;
+            left: -30px;
+            top: 10px;
+            background: var(--forest-green);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 40px;
+            border-radius: 10px 0 0 10px;
+            cursor: pointer;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        .floating-widgets {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .widget {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .widget:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+        }
+
+        .widget-title {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--charcoal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-ticker {
+            background: var(--golden-yellow);
+            color: var(--charcoal);
+            padding: 8px 15px;
+            font-size: 14px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: scroll-left 30s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feedback-form select,
+        .feedback-form textarea,
+        .feedback-form input {
+            padding: 12px;
+            border: 2px solid var(--light-grey);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-form select:focus,
+        .feedback-form textarea:focus,
+        .feedback-form input:focus {
+            outline: none;
+            border-color: var(--himalayan-blue);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        .footer {
+            background: rgba(33, 33, 33, 0.15);
+            backdrop-filter: blur(10px);
+            color: var(--charcoal);
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--light-grey);
+            border-top: 5px solid var(--himalayan-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .popup-content {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .popup-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--himalayan-blue);
+            margin-bottom: 8px;
+        }
+
+        .popup-rating {
+            color: var(--golden-yellow);
+            margin: 5px 0;
+        }
+
+        .popup-price {
+            color: var(--forest-green);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* Map Filter Panel */
+        .map-filter-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 0;
+            z-index: 1000;
+            max-width: 500px;
+            width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .map-filter-panel.active {
+            display: block;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .filter-header {
+            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-header h3 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .close-filter {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .filter-content {
+            padding: 20px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section h4 {
+            font-family: 'Roboto', sans-serif;
+            color: var(--charcoal);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* My Route Section */
+        .my-route-section {
+            border-top: 2px solid var(--light-grey);
+            padding: 20px;
+            margin-top: auto;
+            background: var(--off-white);
+        }
+
+        .route-place-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .remove-place-btn {
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .clear-route-btn, .create-itinerary-btn {
+            width: 100%;
+            background: var(--sunset-orange);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .create-itinerary-btn {
+            background: var(--forest-green);
+        }
+
+        /* Chatbot */
+        .chatbot-container {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chatbot-window.active {
+            display: flex;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header h3 {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+        }
+
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            font-size: 14px;
+            animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message.bot {
+            background: var(--light-grey);
+            align-self: flex-start;
+        }
+
+        .chat-message.user {
+            background: var(--himalayan-blue);
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chatbot-input-area {
+            padding: 15px;
+            border-top: 1px solid var(--light-grey);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--light-grey);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .chatbot-input:focus {
+            outline: none;
+            border-color: var(--himalayan-blue);
+        }
+
+        .chatbot-send {
+            background: var(--himalayan-blue);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--charcoal);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--light-grey);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--himalayan-blue);
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .form-links a {
+            color: var(--himalayan-blue);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-links a:hover {
+            text-decoration: underline;
+        }
+
+        .responsive-hide {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                height: calc(100vh - 70px);
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-toggle {
+                position: fixed;
+                left: 10px;
+                top: 80px;
+                right: auto;
+                border-radius: 10px;
+            }
+
+            .floating-widgets {
+                position: relative;
+                flex-direction: row;
+                top: 10px;
+                left: 10px;
+            }
+
+            .widget {
+                min-width: 150px;
+            }
+
+            .legend {
+                top: 10px;
+                right: 10px;
+                max-width: 150px;
+            }
+
+            .responsive-hide {
+                display: none;
+            }
+
+            .title {
+                font-size: 18px;
+            }
+
+            .weather-widget {
+                padding: 6px 12px;
+            }
+
+            .map-controls {
+                bottom: 60px;
+                right: 10px;
+            }
+
+            .chatbot-window {
+                width: 90vw;
+            }
+
+            .chatbot-container {
+                left: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="map"></div>
-
-  <div class="sidebar">
-    <h2 data-lang-key="map_layers">Map Layers</h2>
-    <div class="layer-toggle">
-      <input type="checkbox" id="hotels" checked onchange="toggleLayer('hotels')"/> Hotels<br/>
-      <input type="checkbox" id="temples" checked onchange="toggleLayer('temples')"/> Temples<br/>
-      <input type="checkbox" id="touristPlaces" checked onchange="toggleLayer('touristPlaces')"/> Tourist Places<br/>
-      <input type="checkbox" id="rivers" checked onchange="toggleLayer('rivers')"/> Rivers<br/>
-      <input type="checkbox" id="district" checked onchange="toggleLayer('district')"/> District Boundary<br/>
-      <input type="checkbox" id="tehsil" checked onchange="toggleLayer('tehsil')"/> Tehsil Boundary<br/>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
     </div>
-    <h3>Weather</h3>
-    <div id="weather-widget">Loading...</div>
-    <h3>Alerts</h3>
-    <div id="alerts-widget">Loading...</div>
-    <h3>My Route</h3>
-    <div id="myRoute"></div>
-  </div>
 
-  <div class="chatbot-btn" onclick="toggleChatbot()">
-    <i class="fas fa-comments"></i>
-  </div>
-  <div class="chatbot-window" id="chatbot">
-    <div class="chat-header">🌍 Bhoomi - Your Guide</div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input">
-      <input id="chatInput" type="text" placeholder="Ask Bhoomi..."/>
-      <button onclick="sendMessage()">Send</button>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo">
+                <i class="fas fa-mountain"></i>
+            </div>
+            <div class="title" data-lang-key="title">Nainital Smart Tourism Pilot</div>
+        </div>
+        <div class="weather-widget" id="weatherWidget">
+            <i class="fas fa-sun"></i>
+            <span id="temperature">22°C</span>
+            <span class="responsive-hide">| Partly Cloudy</span>
+        </div>
+        <div class="user-section">
+            <button class="btn" onclick="switchLanguage('en')" data-lang-key="english">English</button>
+            <button class="btn" onclick="switchLanguage('hi')" data-lang-key="hindi">हिंदी</button>
+            <button class="btn" onclick="switchLanguage('ku')" data-lang-key="kumaoni">कुमाऊँनी</button>
+            <button class="btn" onclick="openLoginModal()"><i class="fas fa-user"></i> <span data-lang-key="login">Login</span></button>
+        </div>
+    </header>
+
+    <!-- Event Ticker -->
+    <div class="event-ticker">
+        <div class="ticker-content" id="eventTicker">
+            🎉 Upcoming: Nainital Lake Festival (Dec 15-17) | 🏔️ Winter Sports Week (Jan 5-12) | 🛕 Nanda Devi Fair (Sep 2-8) | 🚶‍♂️ Himalayan Trek Season starts Nov 1st
+        </div>
     </div>
-  </div>
 
-  <div class="footer">© 2025 Nainital Tourism | Map Data & GeoJSON</div>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="tab-container">
+                <div class="tab active" data-tab="layers">
+                    <i class="fas fa-layer-group"></i><br><span data-lang-key="map-layers">Map Layers</span>
+                </div>
+                <div class="tab" data-tab="itinerary">
+                    <i class="fas fa-route"></i><br><span data-lang-key="routes">Routes</span>
+                </div>
+                <div class="tab" data-tab="sustainability">
+                    <i class="fas fa-leaf"></i><br><span data-lang-key="eco">Eco</span>
+                </div>
+                <div class="tab" data-tab="feedback">
+                    <i class="fas fa-comment"></i><br><span data-lang-key="feedback">Feedback</span>
+                </div>
+            </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    const API_CONFIG = {
-      baseURL: "http://localhost:3000/api",
-      endpoints: {
-        feedback: "/feedback",
-        login: "/auth/login",
-        signup: "/auth/signup",
-        users: "/users",
-        weather: "/weather",
-        alerts: "/alerts"
-      }
-    };
+            <!-- Map Layers Tab -->
+            <div class="tab-content" id="layers-content">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search places, hotels, temples..." id="searchInput" data-lang-key-placeholder="search">
+                </div>
 
-    const layerGroups = {
-      hotels: L.layerGroup(),
-      temples: L.layerGroup(),
-      touristPlaces: L.layerGroup(),
-      rivers: L.layerGroup(),
-      district: L.layerGroup(),
-      tehsil: L.layerGroup()
-    };
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <i class="fas fa-layers"></i> <span data-lang-key="toggle-layers">Toggle Layers</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="hotels-layer" checked>
+                        <label><i class="fas fa-bed" style="color: var(--sunset-orange);"></i> <span data-lang-key="hotels">Hotels & Accommodations</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="temples-layer" checked>
+                        <label><i class="fas fa-place-of-worship" style="color: var(--golden-yellow);"></i> <span data-lang-key="temples">Temples & Religious Sites</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="tourist-places-layer" checked>
+                        <label><i class="fas fa-mountain" style="color: var(--forest-green);"></i> <span data-lang-key="tourist-places">Tourist Attractions</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="roads-layer">
+                        <label><i class="fas fa-road" style="color: var(--charcoal);"></i> <span data-lang-key="roads">Road Network</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="rivers-layer">
+                        <label><i class="fas fa-water" style="color: var(--himalayan-blue);"></i> <span data-lang-key="rivers">Rivers & Water Bodies</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="population-layer">
+                        <label><i class="fas fa-users" style="color: var(--red);"></i> <span data-lang-key="population">Population Density</span></label>
+                    </div>
+                </div>
+            </div>
 
-    let map;
-    let myRoute = [];
+            <!-- Itinerary Tab -->
+            <div class="tab-content" id="itinerary-content" style="display: none;">
+                <div class="itinerary-card" data-itinerary="1-day-nature">
+                    <div class="itinerary-title">🌿 <span data-lang-key="1-day">1-Day Nature Explorer</span></div>
+                    <p data-lang-key="1-day-desc">Perfect for nature lovers seeking tranquility</p>
+                    <small>Naini Lake → Snow View Point → Eco Cave Gardens</small>
+                </div>
+                <div class="itinerary-card" data-itinerary="2-day-family">
+                    <div class="itinerary-title">👨‍👩‍👧‍👦 <span data-lang-key="2-day">2-Day Family Adventure</span></div>
+                    <p data-lang-key="2-day-desc">Fun activities for the whole family</p>
+                    <small>Mall Road → Rope Way → Naina Devi Temple → Zoo</small>
+                </div>
+                <div class="itinerary-card" data-itinerary="3-day-complete">
+                    <div class="itinerary-title">🏔️ <span data-lang-key="3-day">3-Day Complete Experience</span></div>
+                    <p data-lang-key="3-day-desc">Comprehensive tour covering all highlights</p>
+                    <small>All major attractions + nearby hill stations</small>
+                </div>
+                <div class="itinerary-card" data-itinerary="spiritual">
+                    <div class="itinerary-title">🕉️ <span data-lang-key="spiritual">Spiritual Journey</span></div>
+                    <p data-lang-key="spiritual-desc">Visit sacred temples and meditation spots</p>
+                    <small>Naina Devi → Hanuman Garhi → Kainchi Dham</small>
+                </div>
+            </div>
 
-    function initMap() {
-      map = L.map("map").setView([29.38, 79.45], 11);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-      }).addTo(map);
+            <!-- Sustainability Tab -->
+            <div class="tab-content" id="sustainability-content" style="display: none;">
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <i class="fas fa-leaf"></i> <span data-lang-key="eco-layers">Eco-Tourism Layers</span>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="eco-zones">
+                        <label><i class="fas fa-shield-alt" style="color: var(--forest-green);"></i> <span data-lang-key="eco-zones">Eco-Sensitive Zones</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="waste-bins">
+                        <label><i class="fas fa-trash" style="color: var(--sunset-orange);"></i> <span data-lang-key="waste-bins">Waste Management Points</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="no-plastic">
+                        <label><i class="fas fa-ban" style="color: var(--red);"></i> <span data-lang-key="no-plastic">No-Plastic Zones</span></label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="green-trails">
+                        <label><i class="fas fa-leaf" style="color: var(--forest-green);"></i> <span data-lang-key="green-trails">Green Walking Trails</span></label>
+                    </div>
+                </div>
+                <div style="background: var(--light-green); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <h4 style="color: var(--forest-green); margin-bottom: 10px;">🌱 <span data-lang-key="sustain-tips">Sustainability Tips</span></h4>
+                    <ul style="font-size: 12px; line-height: 1.6;">
+                        <li data-lang-key="tip1">Use reusable water bottles</li>
+                        <li data-lang-key="tip2">Follow marked trails only</li>
+                        <li data-lang-key="tip3">Dispose waste in designated bins</li>
+                        <li data-lang-key="tip4">Support local eco-friendly businesses</li>
+                        <li data-lang-key="tip5">Respect wildlife and nature</li>
+                    </ul>
+                </div>
+            </div>
 
-      // Add all groups initially
-      Object.values(layerGroups).forEach(g => g.addTo(map));
+            <!-- Feedback Tab -->
+            <div class="tab-content" id="feedback-content" style="display: none;">
+                <div class="feedback-form">
+                    <h3 style="margin-bottom: 15px;" data-lang-key="share-exp">Share Your Experience</h3>
+                    <select id="visitedPlace">
+                        <option value="">Select place visited</option>
+                        <option value="naini-lake">Naini Lake</option>
+                        <option value="mall-road">Mall Road</option>
+                        <option value="snow-view">Snow View Point</option>
+                        <option value="naina-devi">Naina Devi Temple</option>
+                        <option value="tiffin-top">Tiffin Top</option>
+                    </select>
+                    <select id="experienceRating">
+                        <option value="">Rate your experience</option>
+                        <option value="excellent">🌟 Excellent - Clean & Safe</option>
+                        <option value="good">👍 Good - Well Maintained</option>
+                        <option value="average">😐 Average - Needs Minor Improvements</option>
+                        <option value="poor">👎 Poor - Crowded/Unsafe</option>
+                        <option value="needs-attention">⚠️ Needs Immediate Attention</option>
+                    </select>
+                    <textarea placeholder="Share additional feedback or suggestions..." rows="4" id="feedbackComments"></textarea>
+                    <button class="submit-btn" onclick="submitFeedback()">
+                        <i class="fas fa-paper-plane"></i> <span data-lang-key="submit">Submit Feedback</span>
+                    </button>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: var(--off-white); border-radius: 10px;">
+                    <h4 style="margin-bottom: 10px;">📊 <span data-lang-key="insights">Community Insights</span></h4>
+                    <div style="font-size: 12px;">
+                        <div>Most Clean: Snow View Point (92% positive)</div>
+                        <div>Most Crowded: Mall Road (Peak hours: 10-12 AM)</div>
+                        <div>Hidden Gem: Eco Cave Gardens (89% rating)</div>
+                    </div>
+                </div>
+            </div>
 
-      loadGeoJsonLayers();
-      updateWeather();
-      updateAlerts();
-      setInterval(updateWeather, 120000);
-      setInterval(updateAlerts, 120000);
-    }
+            <!-- My Route Section -->
+            <div class="my-route-section">
+                <div class="filter-title">
+                    <i class="fas fa-map-marked-alt"></i> <span data-lang-key="my-route">My Route</span>
+                </div>
+                <div id="routePlacesList">
+                    <p style="text-align: center; color: #999; font-size: 14px;" data-lang-key="no-places">No places added yet</p>
+                </div>
+                <button class="clear-route-btn" onclick="clearRoute()" style="display: none;" id="clearRouteBtn">
+                    <i class="fas fa-times-circle"></i> <span data-lang-key="clear-route">Clear Route</span>
+                </button>
+                <button class="create-itinerary-btn" onclick="createItinerary()" style="display: none;" id="createItineraryBtn">
+                    <i class="fas fa-magic"></i> <span data-lang-key="create-itinerary">Create Itinerary</span>
+                </button>
+            </div>
+        </div>
 
-    function toggleLayer(name) {
-      if (document.getElementById(name).checked) {
-        map.addLayer(layerGroups[name]);
-      } else {
-        map.removeLayer(layerGroups[name]);
-      }
-    }
+        <!-- Map Container -->
+        <div class="map-container">
+            <!-- Floating Widgets -->
+            <div class="floating-widgets">
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fas fa-thermometer-half"></i> <span data-lang-key="live-weather">Live Weather</span>
+                    </div>
+                    <div id="weatherDetails">
+                        <div>🌡️ 22°C (Feels like 24°C)</div>
+                        <div>💧 Humidity: 65%</div>
+                        <div>🌤️ Partly Cloudy</div>
+                        <div style="font-size: 11px; margin-top: 5px;">Updated: just now</div>
+                    </div>
+                </div>
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fas fa-exclamation-triangle"></i> <span data-lang-key="live-alerts">Live Alerts</span>
+                    </div>
+                    <div style="font-size: 12px;" id="alertsDetails">
+                        <div>🚦 Heavy traffic on Mall Road</div>
+                        <div>⛰️ Clear weather for trekking</div>
+                        <div>🎪 Cultural program at Naini Lake (6 PM)</div>
+                    </div>
+                </div>
+            </div>
 
-    // Load GeoJSON from GitHub
-    async function loadGeoJsonLayers() {
-      // Hotels
-      const hotels = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Hotels.geojson").then(r=>r.json());
-      L.geoJSON(hotels, {
-        pointToLayer: (f,latlng) => L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-bed" style="color: orange; font-size:20px;"></i>'})}),
-        onEachFeature: (f,l) => {
-          const p=f.properties||{};
-          l.bindPopup(`<div class="popup-title">${p.name||"Hotel"}</div>
-          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+            <!-- Map -->
+            <div id="map"></div>
+
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button class="control-btn" id="satelliteBtn" onclick="toggleSatellite()" title="Toggle Satellite View">
+                    <i class="fas fa-satellite"></i>
+                </button>
+                <button class="control-btn" id="trafficBtn" onclick="toggleTraffic()" title="Toggle Traffic">
+                    <i class="fas fa-traffic-light"></i>
+                </button>
+                <button class="control-btn" onclick="centerMap()" title="Center Map">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+                <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend" id="legend">
+                <button class="legend-toggle" onclick="toggleLegend()">
+                    <i class="fas fa-list"></i>
+                </button>
+                <h4 style="margin-bottom: 15px; font-family: 'Roboto', sans-serif;" data-lang-key="legend">Map Legend</h4>
+                <div id="legendContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <div class="chatbot-container">
+        <button class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="fas fa-comments"></i>
+        </button>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h3>🌍 Bhoomi - Your Guide</h3>
+                <button class="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chat-message bot">
+                    Namaste! I'm Bhoomi, your Nainital tourism assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chatbot-input-area">
+                <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Ask me anything..." onkeypress="handleChatKeyPress(event)">
+                <button class="chatbot-send" onclick="sendChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-lang-key="login">Login</h2>
+                <button class="modal-close" onclick="closeLoginModal()">×</button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label data-lang-key="username">Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="password">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="submit-btn" data-lang-key="login-btn">Login</button>
+                <div class="form-links">
+                    <a onclick="showSignupForm()" data-lang-key="signup-link">Don't have an account? Sign Up</a><br>
+                    <a onclick="showForgotPassword()" data-lang-key="forgot-pass">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-lang-key="signup">Sign Up</h2>
+                <button class="modal-close" onclick="closeSignupModal()">×</button>
+            </div>
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label data-lang-key="full-name">Full Name</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="email">Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="phone">Phone Number</label>
+                    <input type="tel" id="signupPhone" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="city">City</label>
+                    <input type="text" id="signupCity" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="state">State</label>
+                    <input type="text" id="signupState" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="country">Country</label>
+                    <select id="signupCountry" required>
+                        <option value="">Select Country</option>
+                        <option value="IN">India</option>
+                        <option value="US">United States</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="JP">Japan</option>
+                        <option value="CN">China</option>
+                        <option value="BR">Brazil</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="password">Password</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <button type="submit" class="submit-btn" data-lang-key="signup-btn">Sign Up</button>
+                <div class="form-links">
+                    <a onclick="showLoginForm()" data-lang-key="login-link">Already have an account? Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span data-lang-key="footer">Powered by Uttarakhand Tourism Development Board | SKP Projects Pvt. Ltd. | Emergency: 1363 | Tourist Helpline: 0135-2771334</span>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // API Configuration - Replace with your actual backend URL
+        const API_CONFIG = {
+            baseURL: 'http://localhost:3000/api',  // Change to your backend URL
+            endpoints: {
+                feedback: '/feedback',
+                login: '/auth/login',
+                signup: '/auth/signup',
+                users: '/users',
+                weather: '/weather',
+                alerts: '/alerts'
+            }
+        };
+
+        // Global Variables
+        let map;
+        let layerGroups = {};
+        let baseMaps = {};
+        let currentBasemap = 'street';
+        let trafficLayer = null;
+        let currentItinerary = null;
+        let weatherUpdateInterval;
+        let alertsUpdateInterval;
+        let myRoute = [];
+        let currentLanguage = 'en';
+        let currentUser = null;
+
+        // Translations
+        const translations = {
+            en: {
+                title: "Nainital Smart Tourism Pilot",
+                english: "English",
+                hindi: "हिंदी",
+                kumaoni: "कुमाऊँनी",
+                login: "Login",
+                "map-layers": "Map Layers",
+                routes: "Routes",
+                eco: "Eco",
+                feedback: "Feedback",
+                search: "Search places, hotels, temples...",
+                "toggle-layers": "Toggle Layers",
+                hotels: "Hotels & Accommodations",
+                temples: "Temples & Religious Sites",
+                "tourist-places": "Tourist Attractions",
+                roads: "Road Network",
+                rivers: "Rivers & Water Bodies",
+                population: "Population Density",
+                "1-day": "1-Day Nature Explorer",
+                "1-day-desc": "Perfect for nature lovers seeking tranquility",
+                "2-day": "2-Day Family Adventure",
+                "2-day-desc": "Fun activities for the whole family",
+                "3-day": "3-Day Complete Experience",
+                "3-day-desc": "Comprehensive tour covering all highlights",
+                spiritual: "Spiritual Journey",
+                "spiritual-desc": "Visit sacred temples and meditation spots",
+                "eco-layers": "Eco-Tourism Layers",
+                "eco-zones": "Eco-Sensitive Zones",
+                "waste-bins": "Waste Management Points",
+                "no-plastic": "No-Plastic Zones",
+                "green-trails": "Green Walking Trails",
+                "sustain-tips": "Sustainability Tips",
+                tip1: "Use reusable water bottles",
+                tip2: "Follow marked trails only",
+                tip3: "Dispose waste in designated bins",
+                tip4: "Support local eco-friendly businesses",
+                tip5: "Respect wildlife and nature",
+                "share-exp": "Share Your Experience",
+                submit: "Submit Feedback",
+                insights: "Community Insights",
+                "my-route": "My Route",
+                "no-places": "No places added yet",
+                "clear-route": "Clear Route",
+                "create-itinerary": "Create Itinerary",
+                "live-weather": "Live Weather",
+                "live-alerts": "Live Alerts",
+                legend: "Map Legend",
+                username: "Username",
+                password: "Password",
+                "login-btn": "Login",
+                "signup-link": "Don't have an account? Sign Up",
+                "forgot-pass": "Forgot Password?",
+                signup: "Sign Up",
+                "full-name": "Full Name",
+                email: "Email",
+                phone: "Phone Number",
+                city: "City",
+                state: "State",
+                country: "Country",
+                "signup-btn": "Sign Up",
+                "login-link": "Already have an account? Login",
+                footer: "Powered by Uttarakhand Tourism Development Board | SKP Projects Pvt. Ltd. | Emergency: 1363 | Tourist Helpline: 0135-2771334"
+            },
+            hi: {
+                title: "नैनीताल स्मार्ट पर्यटन पायलट",
+                english: "English",
+                hindi: "हिंदी",
+                kumaoni: "कुमाऊँनी",
+                login: "लॉग इन",
+                "map-layers": "मानचित्र परतें",
+                routes: "मार्ग",
+                eco: "पर्यावरण",
+                feedback: "प्रतिक्रिया",
+                search: "स्थान, होटल, मंदिर खोजें...",
+                "toggle-layers": "परतें टॉगल करें",
+                hotels: "होटल और आवास",
+                temples: "मंदिर और धार्मिक स्थल",
+                "tourist-places": "पर्यटन स्थल",
+                roads: "सड़क नेटवर्क",
+                rivers: "नदियाँ और जल निकाय",
+                population: "जनसंख्या घनत्व",
+                "1-day": "1-दिन प्रकृति खोज",
+                "1-day-desc": "प्रकृति प्रेमियों के लिए बिल्कुल उपयुक्त",
+                "2-day": "2-दिन पारिवारिक साहसिक",
+                "2-day-desc": "पूरे परिवार के लिए मज़ेदार गतिविधियाँ",
+                "3-day": "3-दिन पूर्ण अनुभव",
+                "3-day-desc": "सभी मुख्य आकर्षणों को कवर करता है",
+                spiritual: "आध्यात्मिक यात्रा",
+                "spiritual-desc": "पवित्र मंदिरों और ध्यान स्थलों की यात्रा",
+                "eco-layers": "पर्यावरण पर्यटन परतें",
+                "eco-zones": "पर्यावरण संवेदनशील क्षेत्र",
+                "waste-bins": "कचरा प्रबंधन बिंदु",
+                "no-plastic": "प्लास्टिक मुक्त क्षेत्र",
+                "green-trails": "हरे रास्ते",
+                "sustain-tips": "स्थिरता युक्तियाँ",
+                tip1: "पुन: प्रयोज्य पानी की बोतलें उपयोग करें",
+                tip2: "केवल चिह्नित रास्तों का अनुसरण करें",
+                tip3: "निर्धारित कूड़ेदानों में कचरा डालें",
+                tip4: "स्थानीय पर्यावरण-अनुकूल व्यवसायों का समर्थन करें",
+                tip5: "वन्यजीवों और प्रकृति का सम्मान करें",
+                "share-exp": "अपना अनुभव साझा करें",
+                submit: "प्रतिक्रिया सबमिट करें",
+                insights: "सामुदायिक जानकारी",
+                "my-route": "मेरा मार्ग",
+                "no-places": "अभी तक कोई स्थान नहीं जोड़ा गया",
+                "clear-route": "मार्ग साफ़ करें",
+                "create-itinerary": "यात्रा योजना बनाएं",
+                "live-weather": "लाइव मौसम",
+                "live-alerts": "लाइव अलर्ट",
+                legend: "मानचित्र लीजेंड",
+                username: "उपयोगकर्ता नाम",
+                password: "पासवर्ड",
+                "login-btn": "लॉग इन करें",
+                "signup-link": "खाता नहीं है? साइन अप करें",
+                "forgot-pass": "पासवर्ड भूल गए?",
+                signup: "साइन अप",
+                "full-name": "पूरा नाम",
+                email: "ईमेल",
+                phone: "फोन नंबर",
+                city: "शहर",
+                state: "राज्य",
+                country: "देश",
+                "signup-btn": "साइन अप करें",
+                "login-link": "पहले से खाता है? लॉग इन करें",
+                footer: "उत्तराखंड पर्यटन विकास बोर्ड द्वारा संचालित | SKP प्रोजेक्ट्स प्रा. लि. | आपातकाल: 1363 | पर्यटक हेल्पलाइन: 0135-2771334"
+            },
+            ku: {
+                title: "नैनीताल स्मार्ट पर्यटन पायलट",
+                english: "English",
+                hindi: "हिंदी",
+                kumaoni: "कुमाऊँनी",
+                login: "लॉग इन",
+                "map-layers": "नक्शा लेयर्स",
+                routes: "बाट",
+                eco: "पर्यावरण",
+                feedback: "फीडबैक",
+                search: "जगह, होटल, देवाल खोजो...",
+                "toggle-layers": "लेयर टॉगल करो",
+                hotels: "होटल और रहण की जगह",
+                temples: "देवाल और धार्मिक जगह",
+                "tourist-places": "घुमन की जगह",
+                roads: "सड़क नेटवर्क",
+                rivers: "नदी और पाणी",
+                population: "जनसंख्या",
+                "1-day": "1-दिन प्रकृति घुमना",
+                "1-day-desc": "प्रकृति पसंद करन वालों खातिर",
+                "2-day": "2-दिन पारिवारिक घुमना",
+                "2-day-desc": "पूरे परिवार खातिर मजेदार",
+                "3-day": "3-दिन पूरा अनुभव",
+                "3-day-desc": "सब मुख्य जगह घुमना",
+                spiritual: "आध्यात्मिक यात्रा",
+                "spiritual-desc": "पवित्र देवाल और ध्यान की जगह",
+                "eco-layers": "पर्यावरण पर्यटन",
+                "eco-zones": "पर्यावरण क्षेत्र",
+                "waste-bins": "कचरा प्रबंधन",
+                "no-plastic": "प्लास्टिक बिना",
+                "green-trails": "हरा रास्ता",
+                "sustain-tips": "टिप्स",
+                tip1: "दुबारा इस्तेमाल वाली बोतल लगाओ",
+                tip2: "सिर्फ मार्क किया बाट चलो",
+                tip3: "कचड़ा डब्बा में डालो",
+                tip4: "लोकल पर्यावरण-अनुकूल का समर्थन करो",
+                tip5: "जानवर और प्रकृति का सम्मान करो",
+                "share-exp": "अपनो अनुभव बताओ",
+                submit: "फीडबैक भेजो",
+                insights: "समुदाय की जानकारी",
+                "my-route": "मेरो बाट",
+                "no-places": "कोई जगह नी जोड़ी",
+                "clear-route": "बाट साफ करो",
+                "create-itinerary": "यात्रा योजना बनाओ",
+                "live-weather": "लाइव मौसम",
+                "live-alerts": "लाइव अलर्ट",
+                legend: "नक्शा लीजेंड",
+                username: "उपयोगकर्ता नाम",
+                password: "पासवर्ड",
+                "login-btn": "लॉग इन करो",
+                "signup-link": "खाता नी च? साइन अप करो",
+                "forgot-pass": "पासवर्ड भूल गे?",
+                signup: "साइन अप",
+                "full-name": "पूरो नाम",
+                email: "ईमेल",
+                phone: "फोन नंबर",
+                city: "शहर",
+                state: "राज्य",
+                country: "देश",
+                "signup-btn": "साइन अप करो",
+                "login-link": "पहले से खाता च? लॉग इन करो",
+                footer: "उत्तराखंड पर्यटन विकास बोर्ड | SKP प्रोजेक्ट्स | आपातकाल: 1363 | हेल्पलाइन: 0135-2771334"
+            }
+        };
+
+        // Sample Data
+        const sampleData = {
+            hotels: [
+                {lat: 29.3919, lng: 79.4542, name: "The Naini Retreat", rating: 4.5, price: 3500, facilities: "Pool, Spa, Restaurant", type: "luxury", booking_url: "https://www.booking.com"},
+                {lat: 29.3889, lng: 79.4564, name: "Hotel Alpine", rating: 4.2, price: 2200, facilities: "Restaurant, WiFi", type: "mid-range", booking_url: "https://www.makemytrip.com"},
+                {lat: 29.3845, lng: 79.4511, name: "Budget Inn Nainital", rating: 3.8, price: 1200, facilities: "Basic amenities", type: "budget", booking_url: "https://www.goibibo.com"},
+                {lat: 29.3967, lng: 79.4591, name: "Himalayan View Resort", rating: 4.7, price: 4500, facilities: "Mountain view, Spa", type: "luxury", booking_url: "https://www.agoda.com"},
+                {lat: 29.3801, lng: 79.4489, name: "Lake View Guest House", rating: 4.0, price: 1800, facilities: "Lake view, Restaurant", type: "mid-range", booking_url: "https://www.oyorooms.com"}
+            ],
+            temples: [
+                {lat: 29.3838, lng: 79.4549, name: "Naina Devi Temple", description: "Famous Shakti Peetha temple", timings: "5:00 AM - 10:00 PM"},
+                {lat: 29.4023, lng: 79.4634, name: "Hanuman Garhi", description: "Hilltop temple with panoramic views", timings: "6:00 AM - 8:00 PM"},
+                {lat: 29.4156, lng: 79.4712, name: "Kainchi Dham", description: "Neem Karoli Baba ashram", timings: "6:00 AM - 7:00 PM"},
+                {lat: 29.3756, lng: 79.4423, name: "Bhimeshwar Mahadev", description: "Ancient Shiva temple", timings: "5:00 AM - 9:00 PM"}
+            ],
+            touristPlaces: [
+                {lat: 29.3839, lng: 79.4543, name: "Naini Lake", description: "Heart-shaped natural lake", type: "nature", activities: "Boating, Photography"},
+                {lat: 29.3728, lng: 79.4501, name: "Snow View Point", description: "Best view of Himalayas", type: "viewpoint", activities: "Cable car, Photography"},
+                {lat: 29.3889, lng: 79.4511, name: "Mall Road", description: "Shopping and dining hub", type: "commercial", activities: "Shopping, Dining"},
+                {lat: 29.4089, lng: 79.4634, name: "Tiffin Top", description: "Scenic picnic spot", type: "nature", activities: "Trekking, Picnic"},
+                {lat: 29.3667, lng: 79.4445, name: "Eco Cave Gardens", description: "Natural cave system", type: "nature", activities: "Exploration, Nature walk"}
+            ],
+            rivers: [
+                {lat: 29.3839, lng: 79.4543, name: "Naini Lake", type: "lake"},
+                {lat: 29.4012, lng: 79.4612, name: "Sariya Tal", type: "lake"},
+                {lat: 29.3756, lng: 79.4389, name: "Khurpa Tal", type: "lake"}
+            ]
+        };
+
+        // Language Switching
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('[data-lang-key]').forEach(element => {
+                const key = element.getAttribute('data-lang-key');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && translations[lang]['search']) {
+                searchInput.placeholder = translations[lang]['search'];
+            }
         }
-      }).addTo(layerGroups.hotels);
 
-      // Temples
-      const temples = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Temples.geojson").then(r=>r.json());
-      L.geoJSON(temples,{
-        pointToLayer:(f,latlng)=>L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-place-of-worship" style="color: goldenrod; font-size:20px;"></i>'})}),
-        onEachFeature:(f,l)=>{
-          const p=f.properties||{};
-          l.bindPopup(`<div class="popup-title">${p.name||"Temple"}</div>
-          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+        // Initialize Map
+        function initMap() {
+            map = L.map('map', {
+                center: [29.3919, 79.4542],
+                zoom: 13,
+                zoomControl: false
+            });
+
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
+
+            baseMaps.street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            });
+
+            baseMaps.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 18
+            });
+
+            baseMaps.terrain = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data: &copy; OpenStreetMap contributors',
+                maxZoom: 17
+            });
+
+            baseMaps.street.addTo(map);
+
+            layerGroups.hotels = L.layerGroup();
+            layerGroups.temples = L.layerGroup();
+            layerGroups.touristPlaces = L.layerGroup();
+            layerGroups.rivers = L.layerGroup();
+            layerGroups.roads = L.layerGroup();
+            layerGroups.population = L.layerGroup();
+            layerGroups.ecoZones = L.layerGroup();
+            layerGroups.wasteBins = L.layerGroup();
+
+            loadGeoJsonLayers();
+
+
+            layerGroups.hotels.addTo(map);
+            layerGroups.temples.addTo(map);
+            layerGroups.touristPlaces.addTo(map);
+
+            updateLegend();
+
+            setTimeout(() => {
+                map.flyTo([29.3919, 79.4542], 13, {
+                    animate: true,
+                    duration: 2
+                });
+                hideLoading();
+            }, 1500);
         }
-      }).addTo(layerGroups.temples);
 
-      // Tourist Places
-      const tplaces = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tourist_place.geojson").then(r=>r.json());
-      L.geoJSON(tplaces,{
-        pointToLayer:(f,latlng)=>L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-mountain" style="color: green; font-size:20px;"></i>'})}),
-        onEachFeature:(f,l)=>{
-          const p=f.properties||{};
-          l.bindPopup(`<div class="popup-title">${p.name||"Tourist Place"}</div>
-          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+        // Load sample data
+        // Load GeoJSON Layers from GitHub
+async function loadGeoJsonLayers() {
+  // Hotels
+  const hotels = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Hotels.geojson").then(r => r.json());
+  L.geoJSON(hotels, {
+    pointToLayer: (f, latlng) => L.marker(latlng, {
+      icon: L.divIcon({ html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size:20px;"></i>' })
+    }),
+    onEachFeature: (f, l) => {
+      const p = f.properties || {};
+      l.bindPopup(`
+        <div class="popup-title">${p.name || "Hotel"}</div>
+        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
+      `);
+    }
+  }).addTo(layerGroups.hotels);
+
+  // Temples
+  const temples = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Temples.geojson").then(r => r.json());
+  L.geoJSON(temples, {
+    pointToLayer: (f, latlng) => L.marker(latlng, {
+      icon: L.divIcon({ html: '<i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size:20px;"></i>' })
+    }),
+    onEachFeature: (f, l) => {
+      const p = f.properties || {};
+      l.bindPopup(`
+        <div class="popup-title">${p.name || "Temple"}</div>
+        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
+      `);
+    }
+  }).addTo(layerGroups.temples);
+
+  // Tourist Places
+  const touristPlaces = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tourist_place.geojson").then(r => r.json());
+  L.geoJSON(touristPlaces, {
+    pointToLayer: (f, latlng) => L.marker(latlng, {
+      icon: L.divIcon({ html: '<i class="fas fa-mountain" style="color: var(--forest-green); font-size:20px;"></i>' })
+    }),
+    onEachFeature: (f, l) => {
+      const p = f.properties || {};
+      l.bindPopup(`
+        <div class="popup-title">${p.name || "Tourist Place"}</div>
+        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
+      `);
+    }
+  }).addTo(layerGroups.touristPlaces);
+
+  // Rivers
+  const rivers = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/River.geojson").then(r => r.json());
+  L.geoJSON(rivers, {
+    style: { color: "#1565C0", weight: 2, fillOpacity: 0.3 }
+  }).addTo(layerGroups.rivers);
+
+  // District Boundary
+  const district = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Nainital.geojson").then(r => r.json());
+  L.geoJSON(district, {
+    style: { color: "#D32F2F", weight: 2, fillOpacity: 0 }
+  }).addTo(layerGroups.population);
+
+  // Tehsil Boundary
+  const tehsil = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tehsil.geojson").then(r => r.json());
+  L.geoJSON(tehsil, {
+    style: { color: "#FF9800", weight: 1.5, dashArray: "4", fillOpacity: 0 }
+  }).addTo(layerGroups.roads);
+}
+
+
+        function addPopulationHeatmap() {
+            const heatmapData = [
+                {lat: 29.3889, lng: 79.4511, intensity: 0.8},
+                {lat: 29.3839, lng: 79.4543, intensity: 0.7},
+                {lat: 29.3919, lng: 79.4542, intensity: 0.6},
+                {lat: 29.3728, lng: 79.4501, intensity: 0.4},
+                {lat: 29.4089, lng: 79.4634, intensity: 0.2}
+            ];
+
+            heatmapData.forEach(point => {
+                const color = point.intensity > 0.7 ? '#D32F2F' : 
+                             point.intensity > 0.5 ? '#FF9800' : 
+                             point.intensity > 0.3 ? '#FFEB3B' : '#A5D6A7';
+                
+                const circle = L.circle([point.lat, point.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.4,
+                    radius: point.intensity * 300
+                });
+                
+                const densityText = point.intensity > 0.7 ? 'Very High' : 
+                                  point.intensity > 0.5 ? 'High' : 
+                                  point.intensity > 0.3 ? 'Medium' : 'Low';
+                
+                circle.bindPopup(`<div class="popup-content"><div class="popup-title">Population Density</div><div>${densityText}</div></div>`);
+                layerGroups.population.addLayer(circle);
+            });
         }
-      }).addTo(layerGroups.touristPlaces);
 
-      // Rivers
-      const rivers = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/River.geojson").then(r=>r.json());
-      L.geoJSON(rivers,{style:{color:"#1565C0",weight:2,fillOpacity:0.3}}).addTo(layerGroups.rivers);
+        // Update Legend
+        function updateLegend() {
+            const legendContent = document.getElementById('legendContent');
+            let html = '';
+            
+            if (map.hasLayer(layerGroups.hotels)) {
+                html += '<div class="legend-item"><i class="fas fa-bed" style="color: var(--sunset-orange); font-size: 16px; width: 20px;"></i><span>Hotels</span></div>';
+            }
+            if (map.hasLayer(layerGroups.temples)) {
+                html += '<div class="legend-item"><i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size: 16px; width: 20px;"></i><span>Temples</span></div>';
+            }
+            if (map.hasLayer(layerGroups.touristPlaces)) {
+                html += '<div class="legend-item"><i class="fas fa-mountain" style="color: var(--forest-green); font-size: 16px; width: 20px;"></i><span>Tourist Places</span></div>';
+            }
+            if (map.hasLayer(layerGroups.rivers)) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #1565C0;"></div><span>Water Bodies</span></div>';
+            }
+            if (map.hasLayer(layerGroups.population)) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: linear-gradient(90deg, #A5D6A7, #D32F2F);"></div><span>Population</span></div>';
+            }
+            if (map.hasLayer(layerGroups.ecoZones)) {
+                html += '<div class="legend-item"><i class="fas fa-shield-alt" style="color: #2E7D32; font-size: 16px; width: 20px;"></i><span>Eco Zones</span></div>';
+            }
+            if (trafficLayer && map.hasLayer(trafficLayer)) {
+                html += '<div class="legend-item"><i class="fas fa-traffic-light" style="color: #F57C00; font-size: 16px; width: 20px;"></i><span>Traffic</span></div>';
+            }
+            
+            legendContent.innerHTML = html || '<p style="text-align: center; color: #999; font-size: 12px;">No active layers</p>';
+        }
 
-      // District
-      const district = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Nainital.geojson").then(r=>r.json());
-      L.geoJSON(district,{style:{color:"#D32F2F",weight:2,fillOpacity:0}}).addTo(layerGroups.district);
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            initEventListeners();
+            updateWeather();
+            updateAlerts();
+            startWeatherUpdates();
+            startAlertsUpdates();
+            
+            // Check if user is logged in
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                updateUserUI();
+            }
+        });
 
-      // Tehsil
-      const tehsil = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tehsil.geojson").then(r=>r.json());
-      L.geoJSON(tehsil,{style:{color:"#FF9800",weight:1.5,dashArray:"4",fillOpacity:0}}).addTo(layerGroups.tehsil);
-    }
+        function initEventListeners() {
+            document.getElementById('sidebarToggle').addEventListener('click', function() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('collapsed');
+                this.innerHTML = sidebar.classList.contains('collapsed') ? 
+                    '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-left"></i>';
+            });
 
-    function addToRoute(name, lat, lng) {
-      myRoute.push([lat,lng]);
-      document.getElementById("myRoute").innerHTML += `<div>${name}</div>`;
-      if(myRoute.length>=2){
-        L.polyline(myRoute,{color:"red"}).addTo(map);
-      }
-    }
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            });
 
-    function updateWeather(){
-      document.getElementById("weather-widget").innerText="☀️ 22°C, Clear (Updated just now)";
-    }
-    function updateAlerts(){
-      const alerts=["Festival in Mall Road","Traffic near Naini Lake","Rain expected in evening"];
-      document.getElementById("alerts-widget").innerText=alerts[Math.floor(Math.random()*alerts.length)]+" (Updated just now)";
-    }
+            document.getElementById('hotels-layer').addEventListener('change', function() {
+                toggleLayer('hotels', this.checked);
+            });
+            document.getElementById('temples-layer').addEventListener('change', function() {
+                toggleLayer('temples', this.checked);
+            });
+            document.getElementById('tourist-places-layer').addEventListener('change', function() {
+                toggleLayer('touristPlaces', this.checked);
+            });
+            document.getElementById('roads-layer').addEventListener('change', function() {
+                toggleLayer('roads', this.checked);
+            });
+            document.getElementById('rivers-layer').addEventListener('change', function() {
+                toggleLayer('rivers', this.checked);
+            });
+            document.getElementById('population-layer').addEventListener('change', function() {
+                toggleLayer('population', this.checked);
+            });
+            document.getElementById('eco-zones').addEventListener('change', function() {
+                toggleLayer('ecoZones', this.checked);
+            });
 
-    // Chatbot
-    function toggleChatbot(){
-      const cb=document.getElementById("chatbot");
-      cb.style.display=(cb.style.display==="flex")?"none":"flex";
-    }
-    function sendMessage(){
-      const input=document.getElementById("chatInput");
-      const msg=input.value.trim();
-      if(!msg) return;
-      const chat=document.getElementById("chatMessages");
-      chat.innerHTML+=`<div><b>You:</b> ${msg}</div>`;
-      chat.innerHTML+=`<div><b>Bhoomi:</b> I can guide you about hotels, temples, weather, routes in Nainital!</div>`;
-      input.value="";
-      chat.scrollTop=chat.scrollHeight;
-    }
+            document.getElementById('searchInput').addEventListener('input', function() {
+                searchPlaces(this.value);
+            });
 
-    initMap();
-  </script>
+            document.querySelectorAll('.itinerary-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    showItinerary(this.dataset.itinerary);
+                });
+            });
+
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`${tabName}-content`).style.display = 'block';
+        }
+
+        function toggleLayer(layerName, show) {
+            if (show && layerGroups[layerName]) {
+                layerGroups[layerName].addTo(map);
+            } else if (layerGroups[layerName]) {
+                map.removeLayer(layerGroups[layerName]);
+            }
+            updateLegend();
+        }
+
+        function searchPlaces(query) {
+            if (!query) return;
+            
+            query = query.toLowerCase();
+            let found = false;
+            
+            [...sampleData.hotels, ...sampleData.temples, ...sampleData.touristPlaces].forEach(place => {
+                if (place.name.toLowerCase().includes(query)) {
+                    map.flyTo([place.lat, place.lng], 16);
+                    found = true;
+                }
+            });
+            
+            if (!found) {
+                alert('Place not found. Try searching for hotels, temples, or tourist attractions.');
+            }
+        }
+
+        function showItinerary(type) {
+            if (currentItinerary) {
+                map.removeLayer(currentItinerary);
+            }
+            
+            let waypoints = [];
+            
+            switch(type) {
+                case '1-day-nature':
+                    waypoints = [[29.3839, 79.4543], [29.3728, 79.4501], [29.3667, 79.4445]];
+                    break;
+                case '2-day-family':
+                    waypoints = [[29.3889, 79.4511], [29.3728, 79.4501], [29.3838, 79.4549], [29.3919, 79.4542]];
+                    break;
+                case '3-day-complete':
+                    waypoints = [[29.3839, 79.4543], [29.3889, 79.4511], [29.3838, 79.4549], [29.4089, 79.4634], [29.3667, 79.4445]];
+                    break;
+                case 'spiritual':
+                    waypoints = [[29.3838, 79.4549], [29.4023, 79.4634], [29.4156, 79.4712], [29.3756, 79.4423]];
+                    break;
+            }
+            
+            if (waypoints.length > 0) {
+                currentItinerary = L.polyline(waypoints, {
+                    color: '#F57C00',
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 5'
+                }).addTo(map);
+                
+                map.fitBounds(currentItinerary.getBounds());
+            }
+        }
+
+        // Map Control Functions
+        function toggleSatellite() {
+            const btn = document.getElementById('satelliteBtn');
+            
+            if (currentBasemap === 'street') {
+                map.removeLayer(baseMaps.street);
+                baseMaps.satellite.addTo(map);
+                currentBasemap = 'satellite';
+                btn.classList.add('active');
+            } else if (currentBasemap === 'satellite') {
+                map.removeLayer(baseMaps.satellite);
+                baseMaps.terrain.addTo(map);
+                currentBasemap = 'terrain';
+            } else {
+                map.removeLayer(baseMaps.terrain);
+                baseMaps.street.addTo(map);
+                currentBasemap = 'street';
+                btn.classList.remove('active');
+            }
+        }
+
+        function toggleTraffic() {
+            const btn = document.getElementById('trafficBtn');
+            
+            if (!trafficLayer) {
+                trafficLayer = L.layerGroup();
+                
+                const trafficData = [
+                    {lat: 29.3889, lng: 79.4511, status: 'heavy'},
+                    {lat: 29.3839, lng: 79.4543, status: 'moderate'},
+                    {lat: 29.3919, lng: 79.4542, status: 'light'}
+                ];
+                
+                trafficData.forEach(traffic => {
+                    const color = traffic.status === 'heavy' ? '#ff0000' : 
+                                 traffic.status === 'moderate' ? '#ffaa00' : '#00ff00';
+                    
+                    const circle = L.circle([traffic.lat, traffic.lng], {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.5,
+                        radius: 150
+                    });
+                    
+                    circle.bindPopup(`<div class="popup-content"><div class="popup-title">Traffic Status</div><div>${traffic.status.charAt(0).toUpperCase() + traffic.status.slice(1)}</div></div>`);
+                    trafficLayer.addLayer(circle);
+                });
+            }
+            
+            if (map.hasLayer(trafficLayer)) {
+                map.removeLayer(trafficLayer);
+                btn.classList.remove('active');
+            } else {
+                trafficLayer.addTo(map);
+                btn.classList.add('active');
+            }
+            
+            updateLegend();
+        }
+
+        function centerMap() {
+            map.flyTo([29.3919, 79.4542], 13);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function toggleLegend() {
+            document.getElementById('legend').classList.toggle('collapsed');
+        }
+
+        // My Route Functions
+        function addToRoute(placeName, lat, lng) {
+            const place = {name: placeName, lat: lat, lng: lng};
+            myRoute.push(place);
+            updateRouteList();
+            alert(`${placeName} added to your route!`);
+        }
+
+        function updateRouteList() {
+            const list = document.getElementById('routePlacesList');
+            const clearBtn = document.getElementById('clearRouteBtn');
+            const itineraryBtn = document.getElementById('createItineraryBtn');
+            
+            if (myRoute.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;" data-lang-key="no-places">No places added yet</p>';
+                clearBtn.style.display = 'none';
+                itineraryBtn.style.display = 'none';
+            } else {
+                list.innerHTML = myRoute.map((place, index) => `
+                    <div class="route-place-item">
+                        <span>${index + 1}. ${place.name}</span>
+                        <button class="remove-place-btn" onclick="removeFromRoute(${index})">×</button>
+                    </div>
+                `).join('');
+                clearBtn.style.display = 'block';
+                itineraryBtn.style.display = 'block';
+            }
+        }
+
+        function removeFromRoute(index) {
+            myRoute.splice(index, 1);
+            updateRouteList();
+        }
+
+        function clearRoute() {
+            if (confirm('Clear all places from your route?')) {
+                myRoute = [];
+                updateRouteList();
+                if (currentItinerary) {
+                    map.removeLayer(currentItinerary);
+                    currentItinerary = null;
+                }
+            }
+        }
+
+        function createItinerary() {
+            if (myRoute.length < 2) {
+                alert('Please add at least 2 places to create an itinerary.');
+                return;
+            }
+            
+            if (currentItinerary) {
+                map.removeLayer(currentItinerary);
+            }
+            
+            const waypoints = myRoute.map(place => [place.lat, place.lng]);
+            
+            currentItinerary = L.polyline(waypoints, {
+                color: '#F57C00',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            }).addTo(map);
+            
+            map.fitBounds(currentItinerary.getBounds());
+            alert('Itinerary created! Your route is now displayed on the map.');
+        }
+
+        // Weather Functions - Updates every 2 minutes
+        function updateWeather() {
+            const weatherData = {
+                temperature: Math.round(18 + Math.random() * 8),
+                humidity: Math.round(60 + Math.random() * 20),
+                condition: ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain'][Math.floor(Math.random() * 4)]
+            };
+            
+            document.getElementById('temperature').textContent = `${weatherData.temperature}°C`;
+            document.getElementById('weatherDetails').innerHTML = `
+                <div>🌡️ ${weatherData.temperature}°C (Feels like ${weatherData.temperature + 2}°C)</div>
+                <div>💧 Humidity: ${weatherData.humidity}%</div>
+                <div>🌤️ ${weatherData.condition}</div>
+                <div style="font-size: 11px; margin-top: 5px;">Updated: just now</div>
+            `;
+        }
+
+        function startWeatherUpdates() {
+            weatherUpdateInterval = setInterval(updateWeather, 120000); // 2 minutes
+        }
+
+        // Alerts Functions - Updates every 2 minutes
+        function updateAlerts() {
+            const alerts = [
+                '🚦 Heavy traffic on Mall Road',
+                '⛰️ Clear weather for trekking',
+                '🎪 Cultural program at Naini Lake (6 PM)',
+                '🚧 Road maintenance near Snow View',
+                '🌟 Special festival at Naina Devi Temple',
+                '🍽️ Food festival at Mall Road today'
+            ];
+            
+            const randomAlerts = [];
+            for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(Math.random() * alerts.length);
+                if (!randomAlerts.includes(alerts[randomIndex])) {
+                    randomAlerts.push(alerts[randomIndex]);
+                }
+            }
+            
+            document.getElementById('alertsDetails').innerHTML = randomAlerts.map(alert => `<div>${alert}</div>`).join('');
+        }
+
+        function startAlertsUpdates() {
+            alertsUpdateInterval = setInterval(updateAlerts, 120000); // 2 minutes
+        }
+
+        // Utility Functions
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function bookHotel(hotelName, bookingUrl) {
+            window.open(bookingUrl, '_blank');
+        }
+
+        function getDirections(lat, lng) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            window.open(url, '_blank');
+        }
+
+        // Feedback Submission - Saves to file
+        async function submitFeedback() {
+            const place = document.getElementById('visitedPlace').value;
+            const rating = document.getElementById('experienceRating').value;
+            const comments = document.getElementById('feedbackComments').value;
+            
+            if (!place || !rating) {
+                alert('Please select place and rating before submitting.');
+                return;
+            }
+            
+            const feedbackData = {
+                place: place,
+                rating: rating,
+                comments: comments,
+                timestamp: new Date().toISOString(),
+                language: currentLanguage,
+                user: currentUser ? currentUser.name : 'Anonymous',
+                user_agent: navigator.userAgent
+            };
+            
+            try {
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.feedback}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(feedbackData)
+                });
+                
+                if (response.ok) {
+                    alert('Thank you for your feedback! Your input helps improve tourism in Nainital.');
+                } else {
+                    throw new Error('Failed to submit feedback');
+                }
+                
+                // Reset form
+                document.getElementById('visitedPlace').value = '';
+                document.getElementById('experienceRating').value = '';
+                document.getElementById('feedbackComments').value = '';
+                
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Failed to submit feedback. Please try again later.');
+            }
+        }
+
+        // Login/Signup Modal Functions
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signupModal').classList.remove('active');
+        }
+
+        function showSignupForm() {
+            closeLoginModal();
+            document.getElementById('signupModal').classList.add('active');
+        }
+
+        function showLoginForm() {
+            closeSignupModal();
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function showForgotPassword() {
+            alert('Password reset link will be sent to your registered email address. Please contact support at: support@nainitaltourism.com');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const loginData = {
+                username: username,
+                password: password,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.login}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentUser = result.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    alert(`Welcome back, ${currentUser.name}!`);
+                    closeLoginModal();
+                    updateUserUI();
+                } else {
+                    alert('Login failed. Please check your credentials and try again.');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please check your credentials and try again.');
+            }
+        }
+
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const signupData = {
+                name: document.getElementById('signupName').value,
+                email: document.getElementById('signupEmail').value,
+                phone: document.getElementById('signupPhone').value,
+                city: document.getElementById('signupCity').value,
+                state: document.getElementById('signupState').value,
+                country: document.getElementById('signupCountry').value,
+                password: document.getElementById('signupPassword').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.signup}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(signupData)
+                });
+                
+                if (response.ok) {
+                    alert('Signup successful! You can now login with your credentials.');
+                    showLoginForm();
+                } else {
+                    alert('Signup failed. Please try again or contact support.');
+                }
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('Signup failed. Please try again or contact support.');
+            }
+        }
+
+        function updateUserUI() {
+            if (currentUser) {
+                const loginBtn = document.querySelector('.user-section .btn:last-child');
+                loginBtn.innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.name}`;
+                loginBtn.onclick = logout;
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                const loginBtn = document.querySelector('.user-section .btn:last-child');
+                loginBtn.innerHTML = '<i class="fas fa-user"></i> <span data-lang-key="login">Login</span>';
+                loginBtn.onclick = openLoginModal;
+                alert('Logged out successfully!');
+            }
+        }
+
+        // Chatbot Functions
+        function toggleChatbot() {
+            const chatbotWindow = document.getElementById('chatbotWindow');
+            chatbotWindow.classList.toggle('active');
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Simulate bot response
+            setTimeout(() => {
+                const response = getBotResponse(message);
+                addChatMessage(response, 'bot');
+            }, 1000);
+        }
+
+        function addChatMessage(text, type) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            messageDiv.textContent = text;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function getBotResponse(message) {
+            const msg = message.toLowerCase();
+            
+            if (msg.includes('hello') || msg.includes('hi') || msg.includes('namaste')) {
+                return 'Namaste! How can I help you explore Nainital today?';
+            } else if (msg.includes('hotel') || msg.includes('stay') || msg.includes('accommodation')) {
+                return 'Nainital has many beautiful hotels! I can see hotels ranging from ₹1200 to ₹4500 per night on the map. Would you like me to suggest some based on your budget?';
+            } else if (msg.includes('temple') || msg.includes('religious') || msg.includes('worship')) {
+                return 'Nainital has several sacred temples including Naina Devi Temple, Hanuman Garhi, and Kainchi Dham. Would you like information about any specific temple?';
+            } else if (msg.includes('weather')) {
+                return 'The current weather in Nainital is pleasant. Check the Live Weather widget on the map for real-time updates!';
+            } else if (msg.includes('boat') || msg.includes('lake') || msg.includes('naini')) {
+                return 'Naini Lake is the heart of Nainital! Boating is available from 10 AM to 5 PM. It is a beautiful heart-shaped lake perfect for photography.';
+            } else if (msg.includes('food') || msg.includes('restaurant') || msg.includes('eat')) {
+                return 'Mall Road has excellent restaurants offering local Kumaoni cuisine and multi-cuisine options. Try local dishes like Bhatt ki Churkani and Aloo ke Gutke!';
+            } else if (msg.includes('snow') || msg.includes('view')) {
+                return 'Snow View Point offers breathtaking views of the Himalayas! You can reach there by cable car or trek. Best visited early morning for clear views.';
+            } else if (msg.includes('itinerary') || msg.includes('plan') || msg.includes('route')) {
+                return 'I can help you plan your trip! Check the Routes tab on the left sidebar for pre-planned itineraries. You can also create your custom route by adding places.';
+            } else if (msg.includes('thank')) {
+                return 'You are welcome! Have a wonderful time exploring Nainital. Feel free to ask if you need any more help!';
+            } else {
+                return 'I am here to help you explore Nainital! You can ask me about hotels, temples, tourist places, weather, food, or travel tips. What would you like to know?';
+            }
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const loginModal = document.getElementById('loginModal');
+            const signupModal = document.getElementById('signupModal');
+            
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+            if (event.target === signupModal) {
+                closeSignupModal();
+            }
+        });
+
+        // Responsive handling
+        window.addEventListener('resize', function() {
+            if (map) {
+                map.invalidateSize();
+            }
+            
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            } else {
+                document.getElementById('sidebar').classList.remove('collapsed');
+            }
+        });
+    </script>
 </body>
 </html>
