@@ -1601,8 +1601,7 @@
             layerGroups.ecoZones = L.layerGroup();
             layerGroups.wasteBins = L.layerGroup();
 
-            loadGeoJsonLayers();
-
+            loadSampleData();
 
             layerGroups.hotels.addTo(map);
             layerGroups.temples.addTo(map);
@@ -1620,72 +1619,102 @@
         }
 
         // Load sample data
-        // Load GeoJSON Layers from GitHub
-async function loadGeoJsonLayers() {
-  // Hotels
-  const hotels = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Hotels.geojson").then(r => r.json());
-  L.geoJSON(hotels, {
-    pointToLayer: (f, latlng) => L.marker(latlng, {
-      icon: L.divIcon({ html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size:20px;"></i>' })
-    }),
-    onEachFeature: (f, l) => {
-      const p = f.properties || {};
-      l.bindPopup(`
-        <div class="popup-title">${p.name || "Hotel"}</div>
-        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
-      `);
-    }
-  }).addTo(layerGroups.hotels);
+        function loadSampleData() {
+            sampleData.hotels.forEach(hotel => {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size: 20px;"></i>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
 
-  // Temples
-  const temples = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Temples.geojson").then(r => r.json());
-  L.geoJSON(temples, {
-    pointToLayer: (f, latlng) => L.marker(latlng, {
-      icon: L.divIcon({ html: '<i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size:20px;"></i>' })
-    }),
-    onEachFeature: (f, l) => {
-      const p = f.properties || {};
-      l.bindPopup(`
-        <div class="popup-title">${p.name || "Temple"}</div>
-        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
-      `);
-    }
-  }).addTo(layerGroups.temples);
+                const marker = L.marker([hotel.lat, hotel.lng], {icon: icon});
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${hotel.name}</div>
+                        <div class="popup-rating">${'★'.repeat(Math.floor(hotel.rating))} ${hotel.rating}/5</div>
+                        <div class="popup-price">₹${hotel.price}/night</div>
+                        <div style="margin: 8px 0; font-size: 12px;">${hotel.facilities}</div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="addToRoute('${hotel.name}', ${hotel.lat}, ${hotel.lng})" style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px; margin-right: 5px;">Add to Route</button>
+                            <button onclick="bookHotel('${hotel.name}', '${hotel.booking_url}')" style="background: var(--himalayan-blue); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px;">Book Now</button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                marker.hotelData = hotel;
+                layerGroups.hotels.addLayer(marker);
+            });
 
-  // Tourist Places
-  const touristPlaces = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tourist_place.geojson").then(r => r.json());
-  L.geoJSON(touristPlaces, {
-    pointToLayer: (f, latlng) => L.marker(latlng, {
-      icon: L.divIcon({ html: '<i class="fas fa-mountain" style="color: var(--forest-green); font-size:20px;"></i>' })
-    }),
-    onEachFeature: (f, l) => {
-      const p = f.properties || {};
-      l.bindPopup(`
-        <div class="popup-title">${p.name || "Tourist Place"}</div>
-        <button onclick="addToRoute('${p.name}', ${l.getLatLng().lat}, ${l.getLatLng().lng})">Add to Route</button>
-      `);
-    }
-  }).addTo(layerGroups.touristPlaces);
+            sampleData.temples.forEach(temple => {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size: 20px;"></i>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
 
-  // Rivers
-  const rivers = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/River.geojson").then(r => r.json());
-  L.geoJSON(rivers, {
-    style: { color: "#1565C0", weight: 2, fillOpacity: 0.3 }
-  }).addTo(layerGroups.rivers);
+                const marker = L.marker([temple.lat, temple.lng], {icon: icon});
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${temple.name}</div>
+                        <div style="margin: 8px 0; font-size: 14px;">${temple.description}</div>
+                        <div style="font-size: 12px; color: var(--forest-green);">⏰ ${temple.timings}</div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="addToRoute('${temple.name}', ${temple.lat}, ${temple.lng})" style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px;">Add to Route</button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                layerGroups.temples.addLayer(marker);
+            });
 
-  // District Boundary
-  const district = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Nainital.geojson").then(r => r.json());
-  L.geoJSON(district, {
-    style: { color: "#D32F2F", weight: 2, fillOpacity: 0 }
-  }).addTo(layerGroups.population);
+            sampleData.touristPlaces.forEach(place => {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<i class="fas fa-mountain" style="color: var(--forest-green); font-size: 20px;"></i>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
 
-  // Tehsil Boundary
-  const tehsil = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tehsil.geojson").then(r => r.json());
-  L.geoJSON(tehsil, {
-    style: { color: "#FF9800", weight: 1.5, dashArray: "4", fillOpacity: 0 }
-  }).addTo(layerGroups.roads);
-}
+                const marker = L.marker([place.lat, place.lng], {icon: icon});
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${place.name}</div>
+                        <div style="margin: 8px 0; font-size: 14px;">${place.description}</div>
+                        <div style="font-size: 12px; color: var(--himalayan-blue);">🎯 ${place.activities}</div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="addToRoute('${place.name}', ${place.lat}, ${place.lng})" style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px; margin-right: 5px;">Add to Route</button>
+                            <button onclick="getDirections(${place.lat}, ${place.lng})" style="background: var(--sunset-orange); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px;">Directions</button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                layerGroups.touristPlaces.addLayer(marker);
+            });
 
+            sampleData.rivers.forEach(water => {
+                const circle = L.circle([water.lat, water.lng], {
+                    color: '#1565C0',
+                    fillColor: '#1565C0',
+                    fillOpacity: 0.3,
+                    radius: 200
+                });
+                circle.bindPopup(`<div class="popup-content"><div class="popup-title">${water.name}</div></div>`);
+                layerGroups.rivers.addLayer(circle);
+            });
+
+            const ecoZone = L.circle([29.3756, 79.4423], {
+                color: '#2E7D32',
+                fillColor: '#2E7D32',
+                fillOpacity: 0.2,
+                radius: 500
+            });
+            ecoZone.bindPopup('<div class="popup-content"><div class="popup-title">Eco-Sensitive Zone</div><div>Protected forest area</div></div>');
+            layerGroups.ecoZones.addLayer(ecoZone);
+
+            addPopulationHeatmap();
+        }
 
         function addPopulationHeatmap() {
             const heatmapData = [
