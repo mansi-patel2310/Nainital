@@ -7,6 +7,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&family=Open+Sans:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+  // Backend API configuration
+  const API_CONFIG = {
+    baseURL: "https://nainital-backend.onrender.com/api",  // <-- Replace with your Render URL
+    endpoints: {
+      feedback: "/feedback",
+      login: "/auth/login",
+      signup: "/auth/signup",
+      chat: "/chat"
+    }
+  };
+
+  // Example: using API_CONFIG in feedback submission
+  async function submitFeedback() {
+    const payload = {
+      place: document.getElementById("visitedPlace").value,
+      rating: document.getElementById("experienceRating").value,
+      comments: document.getElementById("feedbackComments").value
+    };
+
+    try {
+      const res = await fetch(API_CONFIG.baseURL + API_CONFIG.endpoints.feedback, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      alert("Feedback submitted successfully!");
+      console.log("Server response:", data);
+    } catch (err) {
+      console.error("Error saving feedback:", err);
+      alert("Could not submit feedback, please try later.");
+    }
+  }
+</script>
+
     <style>
         :root {
             --forest-green: #2E7D32;
@@ -2246,3 +2282,4 @@
                 "quick-filters": "जल्दी फिल्टर",
                 budget: "बजट होटल",
                 "under-2000": "₹2000 से कम
+
