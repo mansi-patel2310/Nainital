@@ -1,0 +1,16 @@
+{
+"type": "FeatureCollection",
+"name": "Temples",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Shree Maa Naina Devi Temple, Nainital", "descriptio": "Hindu Temple", "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Naina Devi temple.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.4543263, 29.3891405, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Golu Devta Temple (Bell Temple), Ghorakhal", "descriptio": "Golu Devta Temple .(Branch of Golu Devta Temple Ghorakhal)", "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Golu Devta Temple (Bell Temple).jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.5455298, 29.3794835, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Kainchi Dham - Shri Neem Karoli Baba Ashram", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Kainchi Dham - Shri Neem Karoli Baba Ashram.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.5124364, 29.4226297, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Sankat Mochan Mandir,Hanuman Garhi", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Sankat Mochan Mandir,Hanuman Garhi.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.4589645, 29.365391, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Mukteshwar Dham Temple", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Mukteshwar Dham Temple.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.6447621, 29.4748455, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Nainital Lake Shiv Temple", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Nainital Lake Shiv Temple.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.4544748, 29.3890108, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Pasan Devi Temple", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Pasan Devi Temple.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.4605135, 29.3835563, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Chota Kailash Shiv Temple", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Chota Kailash.jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.6500318, 29.2714517, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Golu Devta Temple .(Branch of Golu Devta Temple Ghorakhal)", "descriptio": null, "Image": "D:\\Mansi\\Uttrakhand_Tourism\\Images\\Golu Devta Temple (Bell Temple).jpg" }, "geometry": { "type": "Point", "coordinates": [ 79.4667955, 29.382559, 0.0 ] } }
+]
+}
