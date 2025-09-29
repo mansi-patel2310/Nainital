@@ -1,1543 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nainital Smart Tourism Pilot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&family=Open+Sans:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --forest-green: #2E7D32;
-            --himalayan-blue: #1565C0;
-            --sunset-orange: #F57C00;
-            --golden-yellow: #FBC02D;
-            --off-white: #FAFAFA;
-            --light-grey: #EEEEEE;
-            --charcoal: #212121;
-            --light-green: #A5D6A7;
-            --yellow: #FFEB3B;
-            --orange: #FF9800;
-            --red: #D32F2F;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Open Sans', sans-serif;
-            background: var(--off-white);
-            color: var(--charcoal);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
-            color: white;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            position: relative;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo {
-            width: 40px;
-            height: 40px;
-            background: var(--sunset-orange);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .title {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            font-size: 24px;
-        }
-
-        .weather-widget {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .weather-widget:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
-        .user-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .btn {
-            background: var(--sunset-orange);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Roboto', sans-serif;
-            font-weight: 500;
-        }
-
-        .btn:hover {
-            background: var(--golden-yellow);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
-        }
-
-        .main-container {
-            display: flex;
-            height: calc(100vh - 70px);
-        }
-
-        .sidebar {
-            width: 350px;
-            background: white;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            z-index: 900;
-            overflow-y: auto;
-        }
-
-        .sidebar.collapsed {
-            transform: translateX(-320px);
-        }
-
-        .sidebar-toggle {
-            position: absolute;
-            right: -30px;
-            top: 20px;
-            background: var(--himalayan-blue);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 60px;
-            border-radius: 0 10px 10px 0;
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-toggle:hover {
-            background: var(--forest-green);
-        }
-
-        .tab-container {
-            display: flex;
-            background: var(--light-grey);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px 5px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Roboto', sans-serif;
-            font-weight: 500;
-            font-size: 12px;
-            border-bottom: 3px solid transparent;
-        }
-
-        .tab.active {
-            background: white;
-            color: var(--himalayan-blue);
-            border-bottom-color: var(--himalayan-blue);
-        }
-
-        .tab:hover {
-            background: rgba(21, 101, 192, 0.1);
-        }
-
-        .tab-content {
-            padding: 20px;
-            max-height: calc(100vh - 150px);
-            overflow-y: auto;
-        }
-
-        .filter-group {
-            margin-bottom: 25px;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .filter-title {
-            font-family: 'Roboto', sans-serif;
-            font-weight: 500;
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: var(--charcoal);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .layer-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            transition: all 0.3s ease;
-        }
-
-        .layer-item:hover {
-            background: var(--off-white);
-            padding-left: 10px;
-            border-radius: 5px;
-        }
-
-        .layer-checkbox {
-            margin-right: 10px;
-            accent-color: var(--himalayan-blue);
-        }
-
-        .search-container {
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--light-grey);
-            border-radius: 25px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--himalayan-blue);
-            box-shadow: 0 0 10px rgba(21, 101, 192, 0.2);
-        }
-
-        .price-filter {
-            margin: 15px 0;
-        }
-
-        .price-range {
-            width: 100%;
-            margin: 10px 0;
-            accent-color: var(--sunset-orange);
-        }
-
-        .itinerary-card {
-            background: linear-gradient(135deg, var(--himalayan-blue), var(--forest-green));
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 15px 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            animation: fadeIn 0.6s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .itinerary-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .itinerary-title {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .map-container {
-            flex: 1;
-            position: relative;
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        .map-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 800;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .control-btn {
-            background: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn:hover {
-            background: var(--himalayan-blue);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .legend {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            max-width: 200px;
-            z-index: 800;
-            transition: all 0.3s ease;
-        }
-
-        .legend.collapsed {
-            transform: translateX(180px);
-        }
-
-        .legend-toggle {
-            position: absolute;
-            left: -30px;
-            top: 10px;
-            background: var(--forest-green);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 40px;
-            border-radius: 10px 0 0 10px;
-            cursor: pointer;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 8px 0;
-            font-size: 12px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-            margin-right: 8px;
-        }
-
-        .floating-widgets {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 800;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .widget {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            min-width: 200px;
-        }
-
-        .widget:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
-        }
-
-        .widget-title {
-            font-family: 'Roboto', sans-serif;
-            font-weight: 500;
-            margin-bottom: 10px;
-            color: var(--charcoal);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .event-ticker {
-            background: var(--golden-yellow);
-            color: var(--charcoal);
-            padding: 8px 15px;
-            font-size: 14px;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .ticker-content {
-            display: inline-block;
-            animation: scroll-left 30s linear infinite;
-        }
-
-        @keyframes scroll-left {
-            0% { transform: translate3d(100%, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
-
-        .feedback-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .feedback-form select,
-        .feedback-form textarea {
-            padding: 12px;
-            border: 2px solid var(--light-grey);
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .feedback-form select:focus,
-        .feedback-form textarea:focus {
-            outline: none;
-            border-color: var(--himalayan-blue);
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, var(--forest-green), var(--himalayan-blue));
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
-        }
-
-        .footer {
-            background: var(--charcoal);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 12px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            transition: opacity 0.5s ease;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--light-grey);
-            border-top: 5px solid var(--himalayan-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .popup-content {
-            font-family: 'Open Sans', sans-serif;
-        }
-
-        .popup-title {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            color: var(--himalayan-blue);
-            margin-bottom: 8px;
-        }
-
-        .popup-rating {
-            color: var(--golden-yellow);
-            margin: 5px 0;
-        }
-
-        .popup-price {
-            color: var(--forest-green);
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .responsive-hide {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                position: fixed;
-                height: calc(100vh - 70px);
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .sidebar-toggle {
-                position: fixed;
-                left: 10px;
-                top: 80px;
-                right: auto;
-                border-radius: 10px;
-            }
-
-            .floating-widgets {
-                position: relative;
-                flex-direction: row;
-                top: 10px;
-                left: 10px;
-            }
-
-            .widget {
-                min-width: 150px;
-            }
-
-            .legend {
-                top: 10px;
-                right: 10px;
-                max-width: 150px;
-            }
-
-            .responsive-hide {
-                display: none;
-            }
-
-            .title {
-                font-size: 18px;
-            }
-
-            .weather-widget {
-                padding: 6px 12px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nainital Tourism Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body, html { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; }
+    #map { width:100%; height:100%; }
+    .sidebar { position:absolute; top:0; left:0; width:280px; height:100%; background:#fff; overflow-y:auto; box-shadow:2px 0 6px rgba(0,0,0,0.2); z-index:1000; }
+    .sidebar h2 { margin:0; padding:10px; background:#2E7D32; color:white; font-size:18px; }
+    .layer-toggle { margin:10px; }
+    .footer { position:absolute; bottom:0; left:0; width:100%; background:rgba(33,33,33,0.15); backdrop-filter: blur(6px); color:#333; text-align:center; padding:6px; font-size:12px; z-index:1000;}
+    .chatbot-btn { position:absolute; bottom:80px; left:20px; background:#2E7D32; color:white; border-radius:50%; width:55px; height:55px; display:flex; justify-content:center; align-items:center; font-size:24px; cursor:pointer; z-index:1000;}
+    .chatbot-window { position:absolute; bottom:150px; left:20px; width:300px; max-height:400px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); display:none; flex-direction:column; overflow:hidden; z-index:1000;}
+    .chat-header { background:#2E7D32; color:white; padding:10px; font-weight:bold; }
+    .chat-messages { flex:1; overflow-y:auto; padding:10px; font-size:14px; }
+    .chat-input { display:flex; border-top:1px solid #ddd; }
+    .chat-input input { flex:1; border:none; padding:8px; }
+    .chat-input button { background:#2E7D32; color:white; border:none; padding:8px 12px; cursor:pointer; }
+    .popup-title { font-weight:bold; font-size:14px; }
+  </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loader"></div>
+  <div id="map"></div>
+
+  <div class="sidebar">
+    <h2 data-lang-key="map_layers">Map Layers</h2>
+    <div class="layer-toggle">
+      <input type="checkbox" id="hotels" checked onchange="toggleLayer('hotels')"/> Hotels<br/>
+      <input type="checkbox" id="temples" checked onchange="toggleLayer('temples')"/> Temples<br/>
+      <input type="checkbox" id="touristPlaces" checked onchange="toggleLayer('touristPlaces')"/> Tourist Places<br/>
+      <input type="checkbox" id="rivers" checked onchange="toggleLayer('rivers')"/> Rivers<br/>
+      <input type="checkbox" id="district" checked onchange="toggleLayer('district')"/> District Boundary<br/>
+      <input type="checkbox" id="tehsil" checked onchange="toggleLayer('tehsil')"/> Tehsil Boundary<br/>
     </div>
+    <h3>Weather</h3>
+    <div id="weather-widget">Loading...</div>
+    <h3>Alerts</h3>
+    <div id="alerts-widget">Loading...</div>
+    <h3>My Route</h3>
+    <div id="myRoute"></div>
+  </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-section">
-            <div class="logo">
-                <i class="fas fa-mountain"></i>
-            </div>
-            <div class="title">Nainital Smart Tourism Pilot</div>
-        </div>
-        <div class="weather-widget" id="weatherWidget">
-            <i class="fas fa-sun"></i>
-            <span id="temperature">22°C</span>
-            <span class="responsive-hide">| Partly Cloudy</span>
-        </div>
-        <div class="user-section">
-            <button class="btn">हिंदी</button>
-            <button class="btn"><i class="fas fa-user"></i> Login</button>
-        </div>
-    </header>
-
-    <!-- Event Ticker -->
-    <div class="event-ticker">
-        <div class="ticker-content" id="eventTicker">
-            🎉 Upcoming: Nainital Lake Festival (Dec 15-17) | 🏔️ Winter Sports Week (Jan 5-12) | 🛕 Nanda Devi Fair (Sep 2-8) | 🚶‍♂️ Himalayan Trek Season starts Nov 1st
-        </div>
+  <div class="chatbot-btn" onclick="toggleChatbot()">
+    <i class="fas fa-comments"></i>
+  </div>
+  <div class="chatbot-window" id="chatbot">
+    <div class="chat-header">🌍 Bhoomi - Your Guide</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <input id="chatInput" type="text" placeholder="Ask Bhoomi..."/>
+      <button onclick="sendMessage()">Send</button>
     </div>
+  </div>
 
-    <div class="main-container">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            
-            <div class="tab-container">
-                <div class="tab active" data-tab="filters">
-                    <i class="fas fa-filter"></i><br>Filters
-                </div>
-                <div class="tab" data-tab="itinerary">
-                    <i class="fas fa-route"></i><br>Routes
-                </div>
-                <div class="tab" data-tab="sustainability">
-                    <i class="fas fa-leaf"></i><br>Eco
-                </div>
-                <div class="tab" data-tab="feedback">
-                    <i class="fas fa-comment"></i><br>Feedback
-                </div>
-            </div>
+  <div class="footer">© 2025 Nainital Tourism | Map Data & GeoJSON</div>
 
-            <!-- Filters Tab -->
-            <div class="tab-content" id="filters-content">
-                <div class="search-container">
-                    <input type="text" class="search-input" placeholder="Search places, hotels, temples..." id="searchInput">
-                </div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const API_CONFIG = {
+      baseURL: "http://localhost:3000/api",
+      endpoints: {
+        feedback: "/feedback",
+        login: "/auth/login",
+        signup: "/auth/signup",
+        users: "/users",
+        weather: "/weather",
+        alerts: "/alerts"
+      }
+    };
 
-                <div class="filter-group">
-                    <div class="filter-title">
-                        <i class="fas fa-layers"></i> Map Layers
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="hotels-layer" checked>
-                        <label><i class="fas fa-bed" style="color: var(--sunset-orange);"></i> Hotels & Accommodations</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="temples-layer" checked>
-                        <label><i class="fas fa-place-of-worship" style="color: var(--golden-yellow);"></i> Temples & Religious Sites</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="tourist-places-layer" checked>
-                        <label><i class="fas fa-mountain" style="color: var(--forest-green);"></i> Tourist Attractions</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="roads-layer">
-                        <label><i class="fas fa-road" style="color: var(--charcoal);"></i> Road Network</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="rivers-layer">
-                        <label><i class="fas fa-water" style="color: var(--himalayan-blue);"></i> Rivers & Water Bodies</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="population-layer">
-                        <label><i class="fas fa-users" style="color: var(--red);"></i> Population Density</label>
-                    </div>
-                </div>
+    const layerGroups = {
+      hotels: L.layerGroup(),
+      temples: L.layerGroup(),
+      touristPlaces: L.layerGroup(),
+      rivers: L.layerGroup(),
+      district: L.layerGroup(),
+      tehsil: L.layerGroup()
+    };
 
-                <div class="filter-group">
-                    <div class="filter-title">
-                        <i class="fas fa-rupee-sign"></i> Price Filter (per night)
-                    </div>
-                    <div class="price-filter">
-                        <input type="range" class="price-range" min="500" max="10000" value="5000" id="priceRange">
-                        <div style="text-align: center; margin-top: 5px;">
-                            Up to ₹<span id="priceValue">5000</span>
-                        </div>
-                    </div>
-                </div>
+    let map;
+    let myRoute = [];
 
-                <div class="filter-group">
-                    <div class="filter-title">
-                        <i class="fas fa-tags"></i> Category Filters
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="family-friendly">
-                        <label><i class="fas fa-child" style="color: var(--sunset-orange);"></i> Family Friendly</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="adventure">
-                        <label><i class="fas fa-hiking" style="color: var(--forest-green);"></i> Adventure Sports</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="nature">
-                        <label><i class="fas fa-tree" style="color: var(--forest-green);"></i> Nature & Wildlife</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="religious">
-                        <label><i class="fas fa-om" style="color: var(--golden-yellow);"></i> Religious Tourism</label>
-                    </div>
-                </div>
-            </div>
+    function initMap() {
+      map = L.map("map").setView([29.38, 79.45], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
 
-            <!-- Itinerary Tab -->
-            <div class="tab-content" id="itinerary-content" style="display: none;">
-                <div class="itinerary-card" data-itinerary="1-day-nature">
-                    <div class="itinerary-title">🌿 1-Day Nature Explorer</div>
-                    <p>Perfect for nature lovers seeking tranquility</p>
-                    <small>Naini Lake → Snow View Point → Eco Cave Gardens</small>
-                </div>
-                <div class="itinerary-card" data-itinerary="2-day-family">
-                    <div class="itinerary-title">👨‍👩‍👧‍👦 2-Day Family Adventure</div>
-                    <p>Fun activities for the whole family</p>
-                    <small>Mall Road → Rope Way → Naina Devi Temple → Zoo</small>
-                </div>
-                <div class="itinerary-card" data-itinerary="3-day-complete">
-                    <div class="itinerary-title">🏔️ 3-Day Complete Experience</div>
-                    <p>Comprehensive tour covering all highlights</p>
-                    <small>All major attractions + nearby hill stations</small>
-                </div>
-                <div class="itinerary-card" data-itinerary="spiritual">
-                    <div class="itinerary-title">🕉️ Spiritual Journey</div>
-                    <p>Visit sacred temples and meditation spots</p>
-                    <small>Naina Devi → Hanuman Garhi → Kainchi Dham</small>
-                </div>
-            </div>
+      // Add all groups initially
+      Object.values(layerGroups).forEach(g => g.addTo(map));
 
-            <!-- Sustainability Tab -->
-            <div class="tab-content" id="sustainability-content" style="display: none;">
-                <div class="filter-group">
-                    <div class="filter-title">
-                        <i class="fas fa-leaf"></i> Eco-Tourism Layers
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="eco-zones">
-                        <label><i class="fas fa-shield-alt" style="color: var(--forest-green);"></i> Eco-Sensitive Zones</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="waste-bins">
-                        <label><i class="fas fa-trash" style="color: var(--sunset-orange);"></i> Waste Management Points</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="no-plastic">
-                        <label><i class="fas fa-ban" style="color: var(--red);"></i> No-Plastic Zones</label>
-                    </div>
-                    <div class="layer-item">
-                        <input type="checkbox" class="layer-checkbox" id="green-trails">
-                        <label><i class="fas fa-leaf" style="color: var(--forest-green);"></i> Green Walking Trails</label>
-                    </div>
-                </div>
-                <div style="background: var(--light-green); padding: 15px; border-radius: 10px; margin-top: 20px;">
-                    <h4 style="color: var(--forest-green); margin-bottom: 10px;">🌱 Sustainability Tips</h4>
-                    <ul style="font-size: 12px; line-height: 1.6;">
-                        <li>Use reusable water bottles</li>
-                        <li>Follow marked trails only</li>
-                        <li>Dispose waste in designated bins</li>
-                        <li>Support local eco-friendly businesses</li>
-                        <li>Respect wildlife and nature</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Feedback Tab -->
-            <div class="tab-content" id="feedback-content" style="display: none;">
-                <div class="feedback-form">
-                    <h3 style="margin-bottom: 15px;">Share Your Experience</h3>
-                    <select id="visitedPlace">
-                        <option value="">Select place visited</option>
-                        <option value="naini-lake">Naini Lake</option>
-                        <option value="mall-road">Mall Road</option>
-                        <option value="snow-view">Snow View Point</option>
-                        <option value="naina-devi">Naina Devi Temple</option>
-                        <option value="tiffin-top">Tiffin Top</option>
-                    </select>
-                    <select id="experienceRating">
-                        <option value="">Rate your experience</option>
-                        <option value="excellent">🌟 Excellent - Clean & Safe</option>
-                        <option value="good">👍 Good - Well Maintained</option>
-                        <option value="average">😐 Average - Needs Minor Improvements</option>
-                        <option value="poor">👎 Poor - Crowded/Unsafe</option>
-                        <option value="needs-attention">⚠️ Needs Immediate Attention</option>
-                    </select>
-                    <textarea placeholder="Share additional feedback or suggestions..." rows="4"></textarea>
-                    <button class="submit-btn" onclick="submitFeedback()">
-                        <i class="fas fa-paper-plane"></i> Submit Feedback
-                    </button>
-                </div>
-                <div style="margin-top: 20px; padding: 15px; background: var(--off-white); border-radius: 10px;">
-                    <h4 style="margin-bottom: 10px;">📊 Community Insights</h4>
-                    <div style="font-size: 12px;">
-                        <div>Most Clean: Snow View Point (92% positive)</div>
-                        <div>Most Crowded: Mall Road (Peak hours: 10-12 AM)</div>
-                        <div>Hidden Gem: Eco Cave Gardens (89% rating)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Map Container -->
-        <div class="map-container">
-            <!-- Floating Widgets -->
-            <div class="floating-widgets">
-                <div class="widget">
-                    <div class="widget-title">
-                        <i class="fas fa-thermometer-half"></i> Live Weather
-                    </div>
-                    <div id="weatherDetails">
-                        <div>🌡️ 22°C (Feels like 24°C)</div>
-                        <div>💧 Humidity: 65%</div>
-                        <div>🌤️ Partly Cloudy</div>
-                        <div style="font-size: 11px; margin-top: 5px;">Updated: 2 mins ago</div>
-                    </div>
-                </div>
-                <div class="widget">
-                    <div class="widget-title">
-                        <i class="fas fa-exclamation-triangle"></i> Live Alerts
-                    </div>
-                    <div style="font-size: 12px;">
-                        <div>🚦 Heavy traffic on Mall Road</div>
-                        <div>⛰️ Clear weather for trekking</div>
-                        <div>🎪 Cultural program at Naini Lake (6 PM)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Map -->
-            <div id="map"></div>
-
-            <!-- Map Controls -->
-            <div class="map-controls">
-                <button class="control-btn" onclick="toggleSatellite()" title="Toggle Satellite View">
-                    <i class="fas fa-satellite"></i>
-                </button>
-                <button class="control-btn" onclick="toggleTraffic()" title="Toggle Traffic">
-                    <i class="fas fa-traffic-light"></i>
-                </button>
-                <button class="control-btn" onclick="centerMap()" title="Center Map">
-                    <i class="fas fa-crosshairs"></i>
-                </button>
-                <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-
-            <!-- Legend -->
-            <div class="legend" id="legend">
-                <button class="legend-toggle" onclick="toggleLegend()">
-                    <i class="fas fa-list"></i>
-                </button>
-                <h4 style="margin-bottom: 15px; font-family: 'Roboto', sans-serif;">Map Legend</h4>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--sunset-orange);"></div>
-                    <span>Hotels</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--golden-yellow);"></div>
-                    <span>Temples</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--forest-green);"></div>
-                    <span>Tourist Places</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--himalayan-blue);"></div>
-                    <span>Water Bodies</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--charcoal);"></div>
-                    <span>Roads</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: linear-gradient(90deg, var(--light-green), var(--red));"></div>
-                    <span>Population Density</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        Powered by Uttarakhand Tourism Development Board | SKP Projects Pvt. Ltd. | Emergency: 1363 | Tourist Helpline: 0135-2771334
-    </footer>
-
-    <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Global Variables
-        let map;
-        let layerGroups = {};
-        let currentBasemap = 'street';
-        let trafficLayer = null;
-        let currentItinerary = null;
-        let weatherUpdateInterval;
-
-        // Sample Data - In production, this would come from your backend API
-        const sampleData = {
-            hotels: [
-                {lat: 29.3919, lng: 79.4542, name: "The Naini Retreat", rating: 4.5, price: 3500, facilities: "Pool, Spa, Restaurant", type: "luxury"},
-                {lat: 29.3889, lng: 79.4564, name: "Hotel Alpine", rating: 4.2, price: 2200, facilities: "Restaurant, WiFi", type: "mid-range"},
-                {lat: 29.3845, lng: 79.4511, name: "Budget Inn Nainital", rating: 3.8, price: 1200, facilities: "Basic amenities", type: "budget"},
-                {lat: 29.3967, lng: 79.4591, name: "Himalayan View Resort", rating: 4.7, price: 4500, facilities: "Mountain view, Spa, Multi-cuisine", type: "luxury"},
-                {lat: 29.3801, lng: 79.4489, name: "Lake View Guest House", rating: 4.0, price: 1800, facilities: "Lake view, Restaurant", type: "mid-range"}
-            ],
-            temples: [
-                {lat: 29.3838, lng: 79.4549, name: "Naina Devi Temple", description: "Famous Shakti Peetha temple", timings: "5:00 AM - 10:00 PM"},
-                {lat: 29.4023, lng: 79.4634, name: "Hanuman Garhi", description: "Hilltop temple with panoramic views", timings: "6:00 AM - 8:00 PM"},
-                {lat: 29.4156, lng: 79.4712, name: "Kainchi Dham", description: "Neem Karoli Baba ashram", timings: "6:00 AM - 7:00 PM"},
-                {lat: 29.3756, lng: 79.4423, name: "Bhimeshwar Mahadev", description: "Ancient Shiva temple", timings: "5:00 AM - 9:00 PM"}
-            ],
-            touristPlaces: [
-                {lat: 29.3839, lng: 79.4543, name: "Naini Lake", description: "Heart-shaped natural lake", type: "nature", activities: "Boating, Photography"},
-                {lat: 29.3728, lng: 79.4501, name: "Snow View Point", description: "Best view of Himalayas", type: "viewpoint", activities: "Cable car, Photography"},
-                {lat: 29.3889, lng: 79.4511, name: "Mall Road", description: "Shopping and dining hub", type: "commercial", activities: "Shopping, Dining"},
-                {lat: 29.4089, lng: 79.4634, name: "Tiffin Top", description: "Scenic picnic spot", type: "nature", activities: "Trekking, Picnic"},
-                {lat: 29.3667, lng: 79.4445, name: "Eco Cave Gardens", description: "Natural cave system", type: "nature", activities: "Exploration, Nature walk"}
-            ],
-            rivers: [
-                {lat: 29.3839, lng: 79.4543, name: "Naini Lake", type: "lake"},
-                {lat: 29.4012, lng: 79.4612, name: "Sariya Tal", type: "lake"},
-                {lat: 29.3756, lng: 79.4389, name: "Khurpa Tal", type: "lake"}
-            ]
-        };
-
-        // Initialize Map
-        function initMap() {
-            // Create map centered on Nainital
-            map = L.map('map', {
-                center: [29.3919, 79.4542],
-                zoom: 13,
-                zoomControl: false
-            });
-
-            // Add custom zoom control
-            L.control.zoom({
-                position: 'bottomright'
-            }).addTo(map);
-
-            // Base layers
-            const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 18
-            });
-
-            const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri'
-            });
-
-            const terrainMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
-            });
-
-            // Add default base layer
-            streetMap.addTo(map);
-
-            // Initialize layer groups
-            layerGroups.hotels = L.layerGroup();
-            layerGroups.temples = L.layerGroup();
-            layerGroups.touristPlaces = L.layerGroup();
-            layerGroups.rivers = L.layerGroup();
-            layerGroups.roads = L.layerGroup();
-            layerGroups.population = L.layerGroup();
-            layerGroups.ecoZones = L.layerGroup();
-            layerGroups.wasteBins = L.layerGroup();
-            layerGroups.noPlastic = L.layerGroup();
-
-            // Load sample data
-            //loadSampleData();
-	    loadGeoJsonLayers();
-
-
-            // Add default layers to map
-            layerGroups.hotels.addTo(map);
-            layerGroups.temples.addTo(map);
-            layerGroups.touristPlaces.addTo(map);
-
-            // Map loading animation
-            setTimeout(() => {
-                map.flyTo([29.3919, 79.4542], 13, {
-                    animate: true,
-                    duration: 2
-                });
-                hideLoading();
-            }, 1500);
-        }
-
-        // Load sample data into layers
-<!--
-        function loadSampleData() {
-            // Hotels
-            sampleData.hotels.forEach(hotel => {
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size: 20px;"></i>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                const marker = L.marker([hotel.lat, hotel.lng], {icon: icon});
-                const popupContent = `
-                    <div class="popup-content">
-                        <div class="popup-title">${hotel.name}</div>
-                        <div class="popup-rating">${'★'.repeat(Math.floor(hotel.rating))} ${hotel.rating}/5</div>
-                        <div class="popup-price">₹${hotel.price}/night</div>
-                        <div style="margin: 8px 0; font-size: 12px;">${hotel.facilities}</div>
-                        <button onclick="bookHotel('${hotel.name}')" style="background: var(--himalayan-blue); color: white; border: none; padding: 8px 16px; border-radius: 15px; cursor: pointer;">Book Now</button>
-                    </div>
-                `;
-                marker.bindPopup(popupContent);
-                layerGroups.hotels.addLayer(marker);
-            });
-
-            // Temples
-            sampleData.temples.forEach(temple => {
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size: 20px;"></i>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                const marker = L.marker([temple.lat, temple.lng], {icon: icon});
-                const popupContent = `
-                    <div class="popup-content">
-                        <div class="popup-title">${temple.name}</div>
-                        <div style="margin: 8px 0; font-size: 14px;">${temple.description}</div>
-                        <div style="font-size: 12px; color: var(--forest-green);">⏰ ${temple.timings}</div>
-                    </div>
-                `;
-                marker.bindPopup(popupContent);
-                layerGroups.temples.addLayer(marker);
-            });
-
-            // Tourist Places
-            sampleData.touristPlaces.forEach(place => {
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<i class="fas fa-mountain" style="color: var(--forest-green); font-size: 20px;"></i>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                const marker = L.marker([place.lat, place.lng], {icon: icon});
-                const popupContent = `
-                    <div class="popup-content">
-                        <div class="popup-title">${place.name}</div>
-                        <div style="margin: 8px 0; font-size: 14px;">${place.description}</div>
-                        <div style="font-size: 12px; color: var(--himalayan-blue);">🎯 ${place.activities}</div>
-                        <div style="margin-top: 8px;">
-                            <button onclick="addToItinerary('${place.name}')" style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px; margin-right: 5px;">Add to Route</button>
-                            <button onclick="getDirections('${place.lat}', '${place.lng}')" style="background: var(--sunset-orange); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px;">Directions</button>
-                        </div>
-                    </div>
-                `;
-                marker.bindPopup(popupContent);
-                layerGroups.touristPlaces.addLayer(marker);
-            });
-
-            // Rivers/Lakes
-            sampleData.rivers.forEach(water => {
-                const circle = L.circle([water.lat, water.lng], {
-                    color: 'var(--himalayan-blue)',
-                    fillColor: 'var(--himalayan-blue)',
-                    fillOpacity: 0.3,
-                    radius: 200
-                });
-                circle.bindPopup(`<div class="popup-content"><div class="popup-title">${water.name}</div></div>`);
-                layerGroups.rivers.addLayer(circle);
-            });
-
-            // Add sample eco-sensitive zones
-            const ecoZone = L.circle([29.3756, 79.4423], {
-                color: 'var(--forest-green)',
-                fillColor: 'var(--forest-green)',
-                fillOpacity: 0.2,
-                radius: 500
-            });
-            ecoZone.bindPopup('<div class="popup-content"><div class="popup-title">Eco-Sensitive Zone</div><div>Protected forest area - Please follow eco-guidelines</div></div>');
-            layerGroups.ecoZones.addLayer(ecoZone);
-
-            // Add sample population heatmap
-            addPopulationHeatmap();
-        }
--->
-
-	// Load GeoJSON Layers from GitHub
-async function loadGeoJsonLayers() {
-  // Hotels Layer
-  const hotels = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Hotels.geojson").then(r => r.json());
-  L.geoJSON(hotels, {
-    pointToLayer: (feature, latlng) =>
-      L.marker(latlng, { icon: L.divIcon({ html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size:20px;"></i>' }) }),
-    onEachFeature: (feature, layer) => {
-      const props = feature.properties;
-      layer.bindPopup(`
-        <div class="popup-content">
-          <div class="popup-title">${props.name}</div>
-          <div class="popup-rating">${props.rating ? "★".repeat(Math.floor(props.rating)) + " " + props.rating + "/5" : ""}</div>
-          <div style="margin-top: 8px;">
-            <button onclick="addToRoute('${props.name}', ${layer.getLatLng().lat}, ${layer.getLatLng().lng})"
-              style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px; margin-right: 5px;">
-              Add to Route
-            </button>
-          </div>
-        </div>
-      `);
+      loadGeoJsonLayers();
+      updateWeather();
+      updateAlerts();
+      setInterval(updateWeather, 120000);
+      setInterval(updateAlerts, 120000);
     }
-  }).addTo(layerGroups.hotels);
 
-  // Temples Layer
-  const temples = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Temples.geojson").then(r => r.json());
-  L.geoJSON(temples, {
-    pointToLayer: (feature, latlng) =>
-      L.marker(latlng, { icon: L.divIcon({ html: '<i class="fas fa-place-of-worship" style="color: var(--golden-yellow); font-size:20px;"></i>' }) }),
-    onEachFeature: (feature, layer) => {
-      const props = feature.properties;
-      layer.bindPopup(`
-        <div class="popup-content">
-          <div class="popup-title">${props.name}</div>
-          <div>${props.description || ""}</div>
-          <div style="font-size: 12px; color: var(--forest-green);">⏰ ${props.timings || ""}</div>
-          <div style="margin-top: 8px;">
-            <button onclick="addToRoute('${props.name}', ${layer.getLatLng().lat}, ${layer.getLatLng().lng})"
-              style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px;">
-              Add to Route
-            </button>
-          </div>
-        </div>
-      `);
+    function toggleLayer(name) {
+      if (document.getElementById(name).checked) {
+        map.addLayer(layerGroups[name]);
+      } else {
+        map.removeLayer(layerGroups[name]);
+      }
     }
-  }).addTo(layerGroups.temples);
 
-  // Tourist Places Layer
-  const touristPlaces = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tourist_place.geojson").then(r => r.json());
-  L.geoJSON(touristPlaces, {
-    pointToLayer: (feature, latlng) =>
-      L.marker(latlng, { icon: L.divIcon({ html: '<i class="fas fa-mountain" style="color: var(--forest-green); font-size:20px;"></i>' }) }),
-    onEachFeature: (feature, layer) => {
-      const props = feature.properties;
-      layer.bindPopup(`
-        <div class="popup-content">
-          <div class="popup-title">${props.name}</div>
-          <div>${props.description || ""}</div>
-          <div style="font-size: 12px; color: var(--himalayan-blue);">🎯 ${props.activities || ""}</div>
-          <div style="margin-top: 8px;">
-            <button onclick="addToRoute('${props.name}', ${layer.getLatLng().lat}, ${layer.getLatLng().lng})"
-              style="background: var(--forest-green); color: white; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 11px; margin-right: 5px;">
-              Add to Route
-            </button>
-          </div>
-        </div>
-      `);
+    // Load GeoJSON from GitHub
+    async function loadGeoJsonLayers() {
+      // Hotels
+      const hotels = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Hotels.geojson").then(r=>r.json());
+      L.geoJSON(hotels, {
+        pointToLayer: (f,latlng) => L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-bed" style="color: orange; font-size:20px;"></i>'})}),
+        onEachFeature: (f,l) => {
+          const p=f.properties||{};
+          l.bindPopup(`<div class="popup-title">${p.name||"Hotel"}</div>
+          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+        }
+      }).addTo(layerGroups.hotels);
+
+      // Temples
+      const temples = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Temples.geojson").then(r=>r.json());
+      L.geoJSON(temples,{
+        pointToLayer:(f,latlng)=>L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-place-of-worship" style="color: goldenrod; font-size:20px;"></i>'})}),
+        onEachFeature:(f,l)=>{
+          const p=f.properties||{};
+          l.bindPopup(`<div class="popup-title">${p.name||"Temple"}</div>
+          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+        }
+      }).addTo(layerGroups.temples);
+
+      // Tourist Places
+      const tplaces = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tourist_place.geojson").then(r=>r.json());
+      L.geoJSON(tplaces,{
+        pointToLayer:(f,latlng)=>L.marker(latlng,{icon:L.divIcon({html:'<i class="fas fa-mountain" style="color: green; font-size:20px;"></i>'})}),
+        onEachFeature:(f,l)=>{
+          const p=f.properties||{};
+          l.bindPopup(`<div class="popup-title">${p.name||"Tourist Place"}</div>
+          <button onclick="addToRoute('${p.name}',${l.getLatLng().lat},${l.getLatLng().lng})">Add to Route</button>`);
+        }
+      }).addTo(layerGroups.touristPlaces);
+
+      // Rivers
+      const rivers = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/River.geojson").then(r=>r.json());
+      L.geoJSON(rivers,{style:{color:"#1565C0",weight:2,fillOpacity:0.3}}).addTo(layerGroups.rivers);
+
+      // District
+      const district = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Nainital.geojson").then(r=>r.json());
+      L.geoJSON(district,{style:{color:"#D32F2F",weight:2,fillOpacity:0}}).addTo(layerGroups.district);
+
+      // Tehsil
+      const tehsil = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tehsil.geojson").then(r=>r.json());
+      L.geoJSON(tehsil,{style:{color:"#FF9800",weight:1.5,dashArray:"4",fillOpacity:0}}).addTo(layerGroups.tehsil);
     }
-  }).addTo(layerGroups.touristPlaces);
 
-  // Rivers & Water Bodies Layer
-  const rivers = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/River.geojson").then(r => r.json());
-  L.geoJSON(rivers, {
-    style: { color: "#1565C0", weight: 2, fillOpacity: 0.3 },
-    onEachFeature: (feature, layer) => {
-      layer.bindPopup(`<div class="popup-content"><div class="popup-title">${feature.properties.name}</div></div>`);
+    function addToRoute(name, lat, lng) {
+      myRoute.push([lat,lng]);
+      document.getElementById("myRoute").innerHTML += `<div>${name}</div>`;
+      if(myRoute.length>=2){
+        L.polyline(myRoute,{color:"red"}).addTo(map);
+      }
     }
-  }).addTo(layerGroups.rivers);
 
-  // District Boundary
-  const district = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Nainital.geojson").then(r => r.json());
-  L.geoJSON(district, {
-    style: { color: "#D32F2F", weight: 2, fillOpacity: 0 }
-  }).addTo(layerGroups.population);
+    function updateWeather(){
+      document.getElementById("weather-widget").innerText="☀️ 22°C, Clear (Updated just now)";
+    }
+    function updateAlerts(){
+      const alerts=["Festival in Mall Road","Traffic near Naini Lake","Rain expected in evening"];
+      document.getElementById("alerts-widget").innerText=alerts[Math.floor(Math.random()*alerts.length)]+" (Updated just now)";
+    }
 
-  // Tehsil Boundary
-  const tehsil = await fetch("https://raw.githubusercontent.com/mansi-patel2310/Nainital/refs/heads/main/Tehsil.geojson").then(r => r.json());
-  L.geoJSON(tehsil, {
-    style: { color: "#FF9800", weight: 1.5, dashArray: "4", fillOpacity: 0 }
-  }).addTo(layerGroups.roads);
-}
+    // Chatbot
+    function toggleChatbot(){
+      const cb=document.getElementById("chatbot");
+      cb.style.display=(cb.style.display==="flex")?"none":"flex";
+    }
+    function sendMessage(){
+      const input=document.getElementById("chatInput");
+      const msg=input.value.trim();
+      if(!msg) return;
+      const chat=document.getElementById("chatMessages");
+      chat.innerHTML+=`<div><b>You:</b> ${msg}</div>`;
+      chat.innerHTML+=`<div><b>Bhoomi:</b> I can guide you about hotels, temples, weather, routes in Nainital!</div>`;
+      input.value="";
+      chat.scrollTop=chat.scrollHeight;
+    }
 
-        // Add population heatmap
-        function addPopulationHeatmap() {
-            const heatmapData = [
-                {lat: 29.3889, lng: 79.4511, intensity: 0.8}, // Mall Road - High
-                {lat: 29.3839, lng: 79.4543, intensity: 0.7}, // Naini Lake - High
-                {lat: 29.3919, lng: 79.4542, intensity: 0.6}, // City Center - Medium
-                {lat: 29.3728, lng: 79.4501, intensity: 0.4}, // Snow View - Medium
-                {lat: 29.4089, lng: 79.4634, intensity: 0.2}  // Tiffin Top - Low
-            ];
-
-            heatmapData.forEach(point => {
-                const color = point.intensity > 0.7 ? 'var(--red)' : 
-                             point.intensity > 0.5 ? 'var(--orange)' : 
-                             point.intensity > 0.3 ? 'var(--yellow)' : 'var(--light-green)';
-                
-                const circle = L.circle([point.lat, point.lng], {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.4,
-                    radius: point.intensity * 300
-                });
-                
-                const densityText = point.intensity > 0.7 ? 'Very High' : 
-                                  point.intensity > 0.5 ? 'High' : 
-                                  point.intensity > 0.3 ? 'Medium' : 'Low';
-                
-                circle.bindPopup(`<div class="popup-content"><div class="popup-title">Population Density</div><div>${densityText} density area</div></div>`);
-                layerGroups.population.addLayer(circle);
-            });
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            initEventListeners();
-            updateWeather();
-            startWeatherUpdates();
-        });
-
-        function initEventListeners() {
-            // Sidebar toggle
-            document.getElementById('sidebarToggle').addEventListener('click', function() {
-                const sidebar = document.getElementById('sidebar');
-                sidebar.classList.toggle('collapsed');
-                this.innerHTML = sidebar.classList.contains('collapsed') ? 
-                    '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-left"></i>';
-            });
-
-            // Tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabName = this.dataset.tab;
-                    switchTab(tabName);
-                });
-            });
-
-            // Layer toggles
-            document.getElementById('hotels-layer').addEventListener('change', function() {
-                toggleLayer('hotels', this.checked);
-            });
-            document.getElementById('temples-layer').addEventListener('change', function() {
-                toggleLayer('temples', this.checked);
-            });
-            document.getElementById('tourist-places-layer').addEventListener('change', function() {
-                toggleLayer('touristPlaces', this.checked);
-            });
-            document.getElementById('roads-layer').addEventListener('change', function() {
-                toggleLayer('roads', this.checked);
-            });
-            document.getElementById('rivers-layer').addEventListener('change', function() {
-                toggleLayer('rivers', this.checked);
-            });
-            document.getElementById('population-layer').addEventListener('change', function() {
-                toggleLayer('population', this.checked);
-            });
-            document.getElementById('eco-zones').addEventListener('change', function() {
-                toggleLayer('ecoZones', this.checked);
-            });
-
-            // Price filter
-            document.getElementById('priceRange').addEventListener('input', function() {
-                document.getElementById('priceValue').textContent = this.value;
-                filterHotelsByPrice(parseInt(this.value));
-            });
-
-            // Search
-            document.getElementById('searchInput').addEventListener('input', function() {
-                searchPlaces(this.value);
-            });
-
-            // Itinerary cards
-            document.querySelectorAll('.itinerary-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const itineraryType = this.dataset.itinerary;
-                    showItinerary(itineraryType);
-                });
-            });
-
-            // Mobile responsiveness
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.add('collapsed');
-            }
-        }
-
-        function switchTab(tabName) {
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-            // Show corresponding content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            document.getElementById(`${tabName}-content`).style.display = 'block';
-        }
-
-        function toggleLayer(layerName, show) {
-            if (show && layerGroups[layerName]) {
-                layerGroups[layerName].addTo(map);
-            } else if (layerGroups[layerName]) {
-                map.removeLayer(layerGroups[layerName]);
-            }
-        }
-
-        function filterHotelsByPrice(maxPrice) {
-            layerGroups.hotels.clearLayers();
-            
-            sampleData.hotels.forEach(hotel => {
-                if (hotel.price <= maxPrice) {
-                    const icon = L.divIcon({
-                        className: 'custom-marker',
-                        html: '<i class="fas fa-bed" style="color: var(--sunset-orange); font-size: 20px;"></i>',
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                    });
-
-                    const marker = L.marker([hotel.lat, hotel.lng], {icon: icon});
-                    const popupContent = `
-                        <div class="popup-content">
-                            <div class="popup-title">${hotel.name}</div>
-                            <div class="popup-rating">${'★'.repeat(Math.floor(hotel.rating))} ${hotel.rating}/5</div>
-                            <div class="popup-price">₹${hotel.price}/night</div>
-                            <div style="margin: 8px 0; font-size: 12px;">${hotel.facilities}</div>
-                            <button onclick="bookHotel('${hotel.name}')" style="background: var(--himalayan-blue); color: white; border: none; padding: 8px 16px; border-radius: 15px; cursor: pointer;">Book Now</button>
-                        </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    layerGroups.hotels.addLayer(marker);
-                }
-            });
-        }
-
-        function searchPlaces(query) {
-            if (!query) return;
-            
-            query = query.toLowerCase();
-            let found = false;
-            
-            // Search in all data sources
-            [...sampleData.hotels, ...sampleData.temples, ...sampleData.touristPlaces].forEach(place => {
-                if (place.name.toLowerCase().includes(query)) {
-                    map.flyTo([place.lat, place.lng], 16);
-                    found = true;
-                }
-            });
-            
-            if (!found) {
-                alert('Place not found. Try searching for hotels, temples, or tourist attractions.');
-            }
-        }
-
-        function showItinerary(type) {
-            // Remove existing itinerary
-            if (currentItinerary) {
-                map.removeLayer(currentItinerary);
-            }
-            
-            let waypoints = [];
-            let description = '';
-            
-            switch(type) {
-                case '1-day-nature':
-                    waypoints = [
-                        [29.3839, 79.4543], // Naini Lake
-                        [29.3728, 79.4501], // Snow View Point
-                        [29.3667, 79.4445]  // Eco Cave Gardens
-                    ];
-                    description = '1-Day Nature Explorer Route';
-                    break;
-                case '2-day-family':
-                    waypoints = [
-                        [29.3889, 79.4511], // Mall Road
-                        [29.3728, 79.4501], // Snow View Point
-                        [29.3838, 79.4549], // Naina Devi Temple
-                        [29.3919, 79.4542]  // City Center
-                    ];
-                    description = '2-Day Family Adventure Route';
-                    break;
-                case '3-day-complete':
-                    waypoints = [
-                        [29.3839, 79.4543], // Naini Lake
-                        [29.3889, 79.4511], // Mall Road
-                        [29.3838, 79.4549], // Naina Devi Temple
-                        [29.4089, 79.4634], // Tiffin Top
-                        [29.3667, 79.4445]  // Eco Cave Gardens
-                    ];
-                    description = '3-Day Complete Experience Route';
-                    break;
-                case 'spiritual':
-                    waypoints = [
-                        [29.3838, 79.4549], // Naina Devi Temple
-                        [29.4023, 79.4634], // Hanuman Garhi
-                        [29.4156, 79.4712], // Kainchi Dham
-                        [29.3756, 79.4423]  // Bhimeshwar Mahadev
-                    ];
-                    description = 'Spiritual Journey Route';
-                    break;
-            }
-            
-            if (waypoints.length > 0) {
-                currentItinerary = L.polyline(waypoints, {
-                    color: 'var(--sunset-orange)',
-                    weight: 4,
-                    opacity: 0.8,
-                    dashArray: '10, 5'
-                }).addTo(map);
-                
-                currentItinerary.bindPopup(description);
-                map.fitBounds(currentItinerary.getBounds());
-                
-                // Animate the route drawing
-                animateRoute(currentItinerary);
-            }
-        }
-
-        function animateRoute(route) {
-            const coords = route.getLatLngs();
-            const tempRoute = L.polyline([], {
-                color: 'var(--sunset-orange)',
-                weight: 4,
-                opacity: 0.8
-            }).addTo(map);
-            
-            let i = 0;
-            const timer = setInterval(() => {
-                if (i < coords.length) {
-                    tempRoute.addLatLng(coords[i]);
-                    i++;
-                } else {
-                    clearInterval(timer);
-                    map.removeLayer(tempRoute);
-                }
-            }, 200);
-        }
-
-        // Map Control Functions
-        function toggleSatellite() {
-            // This would toggle between street and satellite view
-            // Implementation depends on your chosen mapping service
-            console.log('Toggle satellite view');
-        }
-
-        function toggleTraffic() {
-            // This would toggle traffic layer
-            // Implementation depends on Google Maps integration
-            console.log('Toggle traffic layer');
-        }
-
-        function centerMap() {
-            map.flyTo([29.3919, 79.4542], 13);
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        function toggleLegend() {
-            const legend = document.getElementById('legend');
-            legend.classList.toggle('collapsed');
-        }
-
-        // Weather Functions
-        function updateWeather() {
-            // In production, this would call OpenWeatherMap API
-            const weatherData = {
-                temperature: Math.round(18 + Math.random() * 8), // 18-26°C range
-                humidity: Math.round(60 + Math.random() * 20),   // 60-80% range
-                condition: ['Sunny', 'Partly Cloudy', 'Cloudy'][Math.floor(Math.random() * 3)]
-            };
-            
-            document.getElementById('temperature').textContent = `${weatherData.temperature}°C`;
-            document.getElementById('weatherDetails').innerHTML = `
-                <div>🌡️ ${weatherData.temperature}°C (Feels like ${weatherData.temperature + 2}°C)</div>
-                <div>💧 Humidity: ${weatherData.humidity}%</div>
-                <div>🌤️ ${weatherData.condition}</div>
-                <div style="font-size: 11px; margin-top: 5px;">Updated: just now</div>
-            `;
-        }
-
-        function startWeatherUpdates() {
-            weatherUpdateInterval = setInterval(updateWeather, 300000); // Update every 5 minutes
-        }
-
-        // Utility Functions
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        function bookHotel(hotelName) {
-            alert(`Redirecting to booking page for ${hotelName}...`);
-            // In production, this would redirect to booking system
-        }
-
-        function addToItinerary(placeName) {
-            alert(`${placeName} added to your itinerary!`);
-            // In production, this would add to user's saved itinerary
-        }
-
-        function getDirections(lat, lng) {
-            // In production, this would integrate with navigation apps
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-            window.open(url, '_blank');
-        }
-
-        function submitFeedback() {
-            const place = document.getElementById('visitedPlace').value;
-            const rating = document.getElementById('experienceRating').value;
-            
-            if (!place || !rating) {
-                alert('Please select place and rating before submitting.');
-                return;
-            }
-            
-            alert('Thank you for your feedback! Your input helps improve tourism in Nainital.');
-            // In production, this would send data to backend
-            
-            // Reset form
-            document.getElementById('visitedPlace').value = '';
-            document.getElementById('experienceRating').value = '';
-            document.querySelector('textarea').value = '';
-        }
-
-        // Responsive handling
-        window.addEventListener('resize', function() {
-            if (map) {
-                map.invalidateSize();
-            }
-            
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.add('collapsed');
-            } else {
-                document.getElementById('sidebar').classList.remove('collapsed');
-            }
-        });
-    </script>
+    initMap();
+  </script>
 </body>
 </html>
