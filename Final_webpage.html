@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nainital Smart Tourism Portal</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        h1, h2 {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h3 {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #FAFAFA;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(to right, #2E7D32, #1565C0);
+            color: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .weather-widget {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-ticker {
+            background: #F57C00;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            animation: pulse 2s infinite;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 384px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
+            z-index: 900;
+        }
+
+        .sidebar.closed {
+            margin-left: -384px;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .tab-button:hover {
+            background: #f3f4f6;
+        }
+
+        .tab-button.active {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Floating Elements */
+        .floating-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 800;
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .floating-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .search-box {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 800;
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            width: 200px;
+        }
+
+        .weather-float {
+            position: absolute;
+            top: 5rem;
+            right: 1rem;
+            z-index: 800;
+            background: linear-gradient(135deg, #1565C0, #2196F3);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 6rem;
+            left: 1rem;
+            z-index: 800;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .alert-box {
+            position: absolute;
+            bottom: 2rem;
+            right: 1rem;
+            z-index: 800;
+            background: #F57C00;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 300px;
+            animation: pulse 2s infinite;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+
+        /* Form Elements */
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2E7D32;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #2E7D32, #1565C0);
+            outline: none;
+        }
+
+        input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            accent-color: #2E7D32;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        label:hover {
+            background: #f9fafb;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #2E7D32, #1565C0);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(to right, #F57C00, #FBC02D);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        /* Utility Classes */
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        .rounded { border-radius: 0.5rem; }
+
+        /* Tag Styles */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-green { background: #d1fae5; color: #065f46; }
+        .tag-blue { background: #dbeafe; color: #1e40af; }
+        .tag-yellow { background: #fef3c7; color: #92400e; }
+        .tag-purple { background: #e9d5ff; color: #6b21a8; }
+        .tag-orange { background: #fed7aa; color: #9a3412; }
+
+        /* Result Summary */
+        .result-summary {
+            background: #d1fae5;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Itinerary Item */
+        .itinerary-item {
+            background: #dbeafe;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: between;
+            align-items: start;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Leaflet Popup Customization */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 0;
+        }
+
+        .popup-content {
+            padding: 1rem;
+            min-width: 200px;
+        }
+
+        .popup-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .popup-details {
+            font-size: 0.875rem;
+        }
+
+        .popup-button {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        /* Base Map Selector */
+        .base-map-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .map-type-btn {
+            padding: 0.5rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .map-type-btn:hover {
+            border-color: #2E7D32;
+        }
+
+        .map-type-btn.active {
+            background: #2E7D32;
+            color: white;
+            border-color: #2E7D32;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <span style="font-size: 2rem;">⛰️</span>
+                    <div class="header-title">
+                        <h1>Nainital Smart Tourism</h1>
+                        <p>Pilot Project - Uttarakhand</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="weather-widget">
+                        <span style="font-size: 1.25rem;">☀️</span>
+                        <div>
+                            <div style="font-weight: 600;">18°C</div>
+                            <div style="font-size: 0.75rem;">Partly Cloudy</div>
+                        </div>
+                    </div>
+                    <div class="event-ticker">
+                        🎉 Nainital Winter Carnival - Dec 15, 2025
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="tab-button active" onclick="switchTab('filters')" id="tab-filters">
+                        <span style="font-size: 1.25rem;">🔍</span>
+                        <span>Filters</span>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('itinerary')" id="tab-itinerary">
+                        <span style="font-size: 1.25rem;">🗺️</span>
+                        <span>Itinerary</span>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('feedback')" id="tab-feedback">
+                        <span style="font-size: 1.25rem;">💬</span>
+                        <span>Feedback</span>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('layers')" id="tab-layers">
+                        <span style="font-size: 1.25rem;">🗾</span>
+                        <span>Layers</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-content">
+                    <!-- Filters Tab -->
+                    <div id="content-filters" class="tab-content">
+                        <div class="space-y-4">
+                            <div>
+                                <input type="text" id="searchInput" placeholder="Search places, hotels..." oninput="filterMarkers()">
+                            </div>
+
+                            <div class="space-y-3">
+                                <h3 class="font-semibold">🏨 Hotel Filters</h3>
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Max Price: ₹<span id="priceValue">5000</span>/night</label>
+                                    <input type="range" id="priceRange" min="1000" max="5000" step="500" value="5000" oninput="updatePrice(this.value)">
+                                </div>
+                                <label>
+                                    <input type="checkbox" id="familyFriendly" onchange="filterMarkers()">
+                                    <span class="text-sm">Family-Friendly Only</span>
+                                </label>
+                            </div>
+
+                            <div class="space-y-3 pt-4 border-t">
+                                <h3 class="font-semibold">🏞️ Tourist Place Filters</h3>
+                                <label>
+                                    <input type="checkbox" id="filterReligious" onchange="filterMarkers()">
+                                    <span class="text-sm">🛕 Religious Sites</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="filterNature" onchange="filterMarkers()">
+                                    <span class="text-sm">🌿 Nature & Scenic</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="filterAdventure" onchange="filterMarkers()">
+                                    <span class="text-sm">⛰️ Adventure Sports</span>
+                                </label>
+                            </div>
+
+                            <div class="pt-4 border-t">
+                                <h3 class="font-semibold mb-2">Results Summary</h3>
+                                <div class="result-summary">
+                                    <div>Hotels: <span class="font-semibold" id="hotelCount">96</span></div>
+                                    <div>Tourist Places: <span class="font-semibold" id="touristCount">96</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Itinerary Tab -->
+                    <div id="content-itinerary" class="tab-content" style="display: none;">
+                        <div class="space-y-4">
+                            <h3 class="font-semibold">Generate Itinerary</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Trip Type</label>
+                                    <select id="itineraryType" style="width: 100%;">
+                                        <option value="adventure">🏔️ Adventure Seeker</option>
+                                        <option value="religious">🛕 Religious Visitor</option>
+                                        <option value="nature">🌿 Nature Lover</option>
+                                        <option value="family">👨‍👩‍👧 Family-Friendly</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Duration: <span id="daysValue">2</span> Days</label>
+                                    <input type="range" id="daysRange" min="1" max="5" value="2" oninput="document.getElementById('daysValue').textContent = this.value">
+                                </div>
+                                <button class="btn-primary" style="width: 100%;" onclick="generateItinerary()">Generate Itinerary</button>
+                            </div>
+
+                            <div id="itineraryList" class="pt-4 border-t" style="display: none;">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="font-semibold">Your Itinerary (<span id="itineraryCount">0</span>)</h3>
+                                    <button class="btn-danger" onclick="clearItinerary()">Clear All</button>
+                                </div>
+                                <div id="itineraryItems" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Tab -->
+                    <div id="content-feedback" class="tab-content" style="display: none;">
+                        <div class="space-y-4">
+                            <h3 class="font-semibold">Share Your Experience</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Place Name</label>
+                                    <input type="text" id="feedbackPlace" placeholder="Enter place name">
+                                </div>
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Rating</label>
+                                    <select id="feedbackRating">
+                                        <option value="clean">✅ Clean & Well-Maintained</option>
+                                        <option value="crowded">👥 Crowded</option>
+                                        <option value="unsafe">⚠️ Unsafe</option>
+                                        <option value="improvement">🔧 Needs Improvement</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm mb-1" style="display: block;">Comments</label>
+                                    <textarea id="feedbackComments" rows="4" placeholder="Share your feedback..."></textarea>
+                                </div>
+                                <button class="btn-secondary" style="width: 100%;" onclick="submitFeedback()">Submit Feedback</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layers Tab -->
+                    <div id="content-layers" class="tab-content" style="display: none;">
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-semibold mb-3">Base Map</h3>
+                                <div class="base-map-grid">
+                                    <button class="map-type-btn active" onclick="changeBaseMap('street', this)">Street</button>
+                                    <button class="map-type-btn" onclick="changeBaseMap('satellite', this)">Satellite</button>
+                                    <button class="map-type-btn" onclick="changeBaseMap('terrain', this)">Terrain</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 pt-4 border-t">
+                                <h3 class="font-semibold mb-3">Map Layers</h3>
+                                <label>
+                                    <input type="checkbox" id="layer-hotels" checked onchange="toggleLayer('hotels')">
+                                    <span class="text-sm">🏨 Hotels</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-tourist" checked onchange="toggleLayer('tourist')">
+                                    <span class="text-sm">🏞️ Tourist Places</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-worship" onchange="toggleLayer('worship')">
+                                    <span class="text-sm">🛕 Places of Worship</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-transport" onchange="toggleLayer('transport')">
+                                    <span class="text-sm">🚌 Transportation</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-rivers" onchange="toggleLayer('rivers')">
+                                    <span class="text-sm">💧 Rivers & Water Bodies</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-population" onchange="toggleLayer('population')">
+                                    <span class="text-sm">👥 Population Density</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-eco" onchange="toggleLayer('eco')">
+                                    <span class="text-sm">🌿 Eco-Sensitive Zones</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="layer-waste" onchange="toggleLayer('waste')">
+                                    <span class="text-sm">🗑️ Waste Management</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map -->
+            <div class="map-container">
+                <button class="floating-button" onclick="toggleSidebar()">
+                    <span style="font-size: 1.25rem;">☰</span>
+                </button>
+
+                <div class="search-box">
+                    <span style="font-size: 1.25rem;">🔍</span>
+                    <input type="text" placeholder="Quick search..." oninput="filterMarkers()">
+                </div>
+
+                <div class="weather-float">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 2.5rem;">☀️</span>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 700;">18°C</div>
+                            <div style="font-size: 0.875rem; opacity: 0.9;">Partly Cloudy</div>
+                            <div style="font-size: 0.75rem; opacity: 0.75;">Humidity: 65%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <h3 class="font-bold mb-2 text-sm">Legend</h3>
+                    <div id="legendContent"></div>
+                </div>
+
+                <div class="alert-box">
+                    <div style="display: flex; gap: 0.5rem; align-items: start;">
+                        <span style="font-size: 1.25rem;">⚠️</span>
+                        <div style="font-size: 0.75rem;">
+                            <div class="font-semibold mb-1">Tourist Advisory</div>
+                            <div>Heavy traffic expected on Mall Road during evening hours</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div>
+                <span class="font-semibold">Powered by:</span> Uttarakhand Tourism | SKP Projects Pvt. Ltd.
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <span>© 2025 Nainital Smart Tourism</span>
+                <a href="#" style="color: #A5D6A7;">Contact</a>
+                <a href="#" style="color: #A5D6A7;">Privacy Policy</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Data Generation
+        const areas = ['Betalghat', 'Dhari', 'Haldwani', 'Kaladhungi', 'Kosyakutauli', 'Lalkuan', 'Nainital', 'Ramnagar'];
+        
+        const areaCoords = {
+            Betalghat: [29.35, 79.45],
+            Dhari: [29.38, 79.52],
+            Haldwani: [29.22, 79.52],
+            Kaladhungi: [29.27, 79.35],
+            Kosyakutauli: [29.18, 79.48],
+            Lalkuan: [29.00, 79.43],
+            Nainital: [29.38, 79.45],
+            Ramnagar: [29.39, 78.83]
+        };
+
+        function generateCoordinates(baseArea) {
+            const base = areaCoords[baseArea] || [29.38, 79.45];
+            return [
+                base[0] + (Math.random() - 0.5) * 0.05,
+                base[1] + (Math.random() - 0.5) * 0.05
+            ];
+        }
+
+        // Generate data
+        const hotelsData = [];
+        areas.forEach(function(area) {
+            for (let i = 0; i < 12; i++) {
+                const hotelNames = ['Lake View', 'Mountain Resort', 'Heritage', 'Eco Lodge', 'Grand', 'Royal'];
+                hotelsData.push({
+                    id: 'hotel_' + area + '_' + i,
+                    name: hotelNames[i % 6] + ' ' + area,
+                    coordinates: generateCoordinates(area),
+                    rating: (3 + Math.random() * 2).toFixed(1),
+                    price: Math.floor(1000 + Math.random() * 4000),
+                    facilities: ['WiFi', 'Parking', 'Restaurant', 'Room Service'].slice(0, 2 + Math.floor(Math.random() * 3)),
+                    familyFriendly: Math.random() > 0.3,
+                    area: area,
+                    type: 'hotel'
+                });
+            }
+        });
+
+        const touristPlaces = [];
+        areas.forEach(function(area) {
+            for (let i = 0; i < 12; i++) {
+                const placeNames = ['Lake', 'Peak', 'Valley', 'Garden', 'Trail', 'Falls'];
+                const types = ['nature', 'adventure', 'family', 'religious'];
+                touristPlaces.push({
+                    id: 'tourist_' + area + '_' + i,
+                    name: placeNames[i % 6] + ' ' + area,
+                    coordinates: generateCoordinates(area),
+                    placeType: types[i % 4],
+                    description: 'A beautiful destination offering scenic views and memorable experiences.',
+                    timings: '6:00 AM - 7:00 PM',
+                    area: area,
+                    type: 'tourist'
+                });
+            }
+        });
+
+        const worshipPlaces = [];
+        areas.forEach(function(area) {
+            for (let i = 0; i < 10; i++) {
+                const worshipNames = ['Shiva', 'Hanuman', 'Durga', 'Church of', 'Mosque'];
+                const types = ['temple', 'church', 'mosque'];
+                worshipPlaces.push({
+                    id: 'worship_' + area + '_' + i,
+                    name: worshipNames[i % 5] + ' ' + area,
+                    coordinates: generateCoordinates(area),
+                    placeType: types[i % 3],
+                    area: area,
+                    type: 'worship'
+                });
+            }
+        });
+
+        const transportation = [];
+        areas.forEach(function(area) {
+            for (let i = 0; i < 10; i++) {
+                const transportNames = ['Bus Stand', 'Taxi Stand', 'Railway Station'];
+                const types = ['bus', 'taxi', 'railway'];
+                transportation.push({
+                    id: 'transport_' + area + '_' + i,
+                    name: transportNames[i % 3] + ' ' + area,
+                    coordinates: generateCoordinates(area),
+                    transportType: types[i % 3],
+                    area: area,
+                    type: 'transport'
+                });
+            }
+        });
+
+        const rivers = [
+            { id: 'river_1', name: 'Kosi River', coordinates: [[29.4, 79.3], [29.2, 79.5]], length: '168 km', origin: 'Dharpani Dhar' },
+            { id: 'river_2', name: 'Gaula River', coordinates: [[29.5, 79.4], [29.1, 79.6]], length: '500 km', origin: 'Sattal' },
+            { id: 'river_3', name: 'Ramganga East', coordinates: [[29.3, 78.9], [29.0, 79.1]], length: '596 km', origin: 'Doodhatoli' }
+        ];
+
+        const populationDensity = [];
+        areas.forEach(function(area) {
+            populationDensity.push({
+                area: area,
+                coordinates: generateCoordinates(area),
+                density: Math.floor(100 + Math.random() * 900)
+            });
+        });
+
+        // Initialize map
+        const map = L.map('map').setView([29.38, 79.45], 10);
+        
+        const baseMaps = {
+            street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri'
+            }),
+            terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenTopoMap'
+            })
+        };
+
+        let currentBaseMap = baseMaps.street;
+        currentBaseMap.addTo(map);
+
+        // Layer groups
+        const layers = {
+            hotels: L.layerGroup().addTo(map),
+            tourist: L.layerGroup().addTo(map),
+            worship: L.layerGroup(),
+            transport: L.layerGroup(),
+            rivers: L.layerGroup(),
+            population: L.layerGroup(),
+            eco: L.layerGroup(),
+            waste: L.layerGroup(),
+            itinerary: L.layerGroup().addTo(map)
+        };
+
+        let itinerary = [];
+        let allMarkers = [];
+
+        // Custom icons
+        function createCustomIcon(color, emoji) {
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease-out;"><span style="font-size: 16px;">${emoji}</span></div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 30],
+                popupAnchor: [0, -30]
+            });
+        }
+
+        // Add markers
+        function addHotelMarkers() {
+            hotelsData.forEach(function(hotel) {
+                const marker = L.marker(hotel.coordinates, {
+                    icon: createCustomIcon('#2E7D32', '🏨')
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #2E7D32;">' +
+                            '🏨 ' + hotel.name +
+                        '</div>' +
+                        '<div class="popup-details space-y-2">' +
+                            '<div>⭐ ' + hotel.rating + ' / 5.0</div>' +
+                            '<div style="font-weight: 700; color: #2E7D32;">💰 ₹' + hotel.price + '/night</div>' +
+                            '<div class="text-xs" style="color: #666;">' + hotel.facilities.join(', ') + '</div>' +
+                            (hotel.familyFriendly ? '<div class="tag tag-blue">👨‍👩‍👧 Family Friendly</div>' : '') +
+                        '</div>' +
+                        '<button class="btn-primary popup-button" onclick="addToItinerary(\'' + hotel.id + '\')">Add to Itinerary</button>' +
+                    '</div>'
+                );
+                marker.data = hotel;
+                layers.hotels.addLayer(marker);
+                allMarkers.push(marker);
+            });
+        }
+
+        function addTouristMarkers() {
+            touristPlaces.forEach(function(place) {
+                const typeEmoji = {nature: '🏞️', adventure: '⛰️', family: '👨‍👩‍👧', religious: '🛕'};
+                const marker = L.marker(place.coordinates, {
+                    icon: createCustomIcon('#1565C0', '🗻')
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #1565C0;">' +
+                            '🗻 ' + place.name +
+                        '</div>' +
+                        '<div class="popup-details space-y-2">' +
+                            '<div class="tag tag-blue">' + typeEmoji[place.placeType] + ' ' + place.placeType + '</div>' +
+                            '<p class="text-xs" style="color: #666;">' + place.description + '</p>' +
+                            '<div class="text-xs" style="color: #666;">⏰ ' + place.timings + '</div>' +
+                        '</div>' +
+                        '<button class="btn-primary popup-button" onclick="addToItinerary(\'' + place.id + '\')">Add to Itinerary</button>' +
+                    '</div>'
+                );
+                marker.data = place;
+                layers.tourist.addLayer(marker);
+                allMarkers.push(marker);
+            });
+        }
+
+        function addWorshipMarkers() {
+            worshipPlaces.forEach(function(place) {
+                const typeEmoji = {temple: '🛕', church: '⛪', mosque: '🕌'};
+                const marker = L.marker(place.coordinates, {
+                    icon: createCustomIcon('#FBC02D', '🛕')
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #FBC02D;">' +
+                            typeEmoji[place.placeType] + ' ' + place.name +
+                        '</div>' +
+                        '<div class="popup-details">' +
+                            '<div class="tag tag-yellow">' + typeEmoji[place.placeType] + ' ' + place.placeType + '</div>' +
+                        '</div>' +
+                        '<button class="btn-primary popup-button" onclick="addToItinerary(\'' + place.id + '\')">Add to Itinerary</button>' +
+                    '</div>'
+                );
+                marker.data = place;
+                layers.worship.addLayer(marker);
+                allMarkers.push(marker);
+            });
+        }
+
+        function addTransportMarkers() {
+            transportation.forEach(function(trans) {
+                const typeEmoji = {bus: '🚌', taxi: '🚕', railway: '🚂'};
+                const marker = L.marker(trans.coordinates, {
+                    icon: createCustomIcon('#9333EA', '🚌')
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #9333EA;">' +
+                            typeEmoji[trans.transportType] + ' ' + trans.name +
+                        '</div>' +
+                        '<div class="tag tag-purple">' + typeEmoji[trans.transportType] + ' ' + trans.transportType + '</div>' +
+                    '</div>'
+                );
+                marker.data = trans;
+                layers.transport.addLayer(marker);
+                allMarkers.push(marker);
+            });
+        }
+
+        function addRivers() {
+            rivers.forEach(function(river) {
+                const polyline = L.polyline(river.coordinates, {
+                    color: '#06B6D4',
+                    weight: 4
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #06B6D4;">' +
+                            '💧 ' + river.name +
+                        '</div>' +
+                        '<div class="popup-details">' +
+                            '<div>Length: <strong>' + river.length + '</strong></div>' +
+                            '<div>Origin: <strong>' + river.origin + '</strong></div>' +
+                        '</div>' +
+                    '</div>'
+                );
+                layers.rivers.addLayer(polyline);
+            });
+        }
+
+        function addPopulationDensity() {
+            populationDensity.forEach(function(pop) {
+                const color = pop.density < 300 ? '#A5D6A7' : 
+                             pop.density < 500 ? '#FFEB3B' : 
+                             pop.density < 700 ? '#FF9800' : '#D32F2F';
+                
+                const circle = L.circle(pop.coordinates, {
+                    radius: 2000,
+                    fillColor: color,
+                    fillOpacity: 0.4,
+                    color: color,
+                    weight: 1
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title">' +
+                            '👥 ' + pop.area +
+                        '</div>' +
+                        '<div>Density: <strong>' + pop.density + ' per km²</strong></div>' +
+                    '</div>'
+                );
+                layers.population.addLayer(circle);
+            });
+        }
+
+        function addEcoZones() {
+            var ecoAreas = areas.slice(0, 5);
+            ecoAreas.forEach(function(area, idx) {
+                const coords = generateCoordinates(area);
+                const circle = L.circle(coords, {
+                    radius: 1500,
+                    fillColor: '#2E7D32',
+                    fillOpacity: 0.2,
+                    color: '#2E7D32',
+                    weight: 2,
+                    dashArray: '5, 5'
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #2E7D32;">' +
+                            '🌿 Eco-Sensitive Zone' +
+                        '</div>' +
+                        '<p class="text-xs" style="color: #666;">Protected area - Follow eco-tourism guidelines</p>' +
+                    '</div>'
+                );
+                layers.eco.addLayer(circle);
+            });
+        }
+
+        function addWastePoints() {
+            areas.forEach(function(area) {
+                const coords = generateCoordinates(area);
+                const marker = L.marker(coords, {
+                    icon: createCustomIcon('#F57C00', '🗑️')
+                }).bindPopup(
+                    '<div class="popup-content">' +
+                        '<div class="popup-title" style="color: #F57C00;">' +
+                            '🗑️ Waste Collection Point' +
+                        '</div>' +
+                        '<p class="text-xs" style="color: #666;">Please use designated bins. No plastic zone nearby.</p>' +
+                    '</div>'
+                );
+                layers.waste.addLayer(marker);
+            });
+        }
+
+        // Initialize all markers
+        addHotelMarkers();
+        addTouristMarkers();
+        addWorshipMarkers();
+        addTransportMarkers();
+        addRivers();
+        addPopulationDensity();
+        addEcoZones();
+        addWastePoints();
+
+        // UI Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('closed');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`content-${tabName}`).style.display = 'block';
+        }
+
+        function updatePrice(value) {
+            document.getElementById('priceValue').textContent = value;
+            filterMarkers();
+        }
+
+        function filterMarkers() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const maxPrice = parseInt(document.getElementById('priceRange').value);
+            const familyFriendly = document.getElementById('familyFriendly').checked;
+            const filterReligious = document.getElementById('filterReligious').checked;
+            const filterNature = document.getElementById('filterNature').checked;
+            const filterAdventure = document.getElementById('filterAdventure').checked;
+
+            let hotelCount = 0;
+            let touristCount = 0;
+
+            allMarkers.forEach(marker => {
+                const data = marker.data;
+                let show = true;
+
+                if (data.type === 'hotel') {
+                    if (data.price > maxPrice) show = false;
+                    if (familyFriendly && !data.familyFriendly) show = false;
+                    if (searchQuery && !data.name.toLowerCase().includes(searchQuery)) show = false;
+                    if (show) hotelCount++;
+                } else if (data.type === 'tourist') {
+                    if (filterReligious && data.placeType !== 'religious') show = false;
+                    if (filterNature && data.placeType !== 'nature') show = false;
+                    if (filterAdventure && data.placeType !== 'adventure') show = false;
+                    if (searchQuery && !data.name.toLowerCase().includes(searchQuery)) show = false;
+                    if (show) touristCount++;
+                }
+
+                if (show) {
+                    marker.setOpacity(1);
+                } else {
+                    marker.setOpacity(0);
+                }
+            });
+
+            document.getElementById('hotelCount').textContent = hotelCount;
+            document.getElementById('touristCount').textContent = touristCount;
+            updateLegend();
+        }
+
+        function toggleLayer(layerName) {
+            const checkbox = document.getElementById(`layer-${layerName}`);
+            if (checkbox.checked) {
+                map.addLayer(layers[layerName]);
+            } else {
+                map.removeLayer(layers[layerName]);
+            }
+            updateLegend();
+        }
+
+        function changeBaseMap(mapType, button) {
+            document.querySelectorAll('.map-type-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            map.removeLayer(currentBaseMap);
+            currentBaseMap = baseMaps[mapType];
+            currentBaseMap.addTo(map);
+        }
+
+        function updateLegend() {
+            const legendContent = document.getElementById('legendContent');
+            let html = '';
+
+            if (document.getElementById('layer-hotels').checked) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #2E7D32;"></div><span>Hotels & Accommodation</span></div>';
+            }
+            if (document.getElementById('layer-tourist').checked) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #1565C0;"></div><span>Tourist Attractions</span></div>';
+            }
+            if (document.getElementById('layer-worship').checked) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #FBC02D;"></div><span>Places of Worship</span></div>';
+            }
+            if (document.getElementById('layer-transport').checked) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #9333EA;"></div><span>Transportation Hubs</span></div>';
+            }
+            if (document.getElementById('layer-rivers').checked) {
+                html += '<div class="legend-item"><div class="legend-color" style="background: #06B6D4;"></div><span>Rivers & Water Bodies</span></div>';
+            }
+            if (document.getElementById('layer-population').checked) {
+                html += '<div style="margin-top: 0.5rem;"><div class="text-xs font-semibold mb-1">Population Density:</div><div style="display: flex; gap: 2px;"><div class="legend-color" style="background: #A5D6A7; width: 20px;"></div><div class="legend-color" style="background: #FFEB3B; width: 20px;"></div><div class="legend-color" style="background: #FF9800; width: 20px;"></div><div class="legend-color" style="background: #D32F2F; width: 20px;"></div></div><div class="text-xs" style="color: #666;">Low → High</div></div>';
+            }
+
+            legendContent.innerHTML = html;
+        }
+
+        function generateItinerary() {
+            var type = document.getElementById('itineraryType').value;
+            var days = parseInt(document.getElementById('daysRange').value);
+            
+            var suggestions = [];
+            
+            if (type === 'adventure') {
+                for (var i = 0; i < touristPlaces.length && suggestions.length < days * 2; i++) {
+                    if (touristPlaces[i].placeType === 'adventure') {
+                        suggestions.push(touristPlaces[i]);
+                    }
+                }
+            } else if (type === 'religious') {
+                for (var i = 0; i < worshipPlaces.length && suggestions.length < days * 2; i++) {
+                    suggestions.push(worshipPlaces[i]);
+                }
+            } else if (type === 'nature') {
+                for (var i = 0; i < touristPlaces.length && suggestions.length < days * 2; i++) {
+                    if (touristPlaces[i].placeType === 'nature') {
+                        suggestions.push(touristPlaces[i]);
+                    }
+                }
+            } else if (type === 'family') {
+                for (var i = 0; i < touristPlaces.length && suggestions.length < days * 2; i++) {
+                    if (touristPlaces[i].placeType === 'family') {
+                        suggestions.push(touristPlaces[i]);
+                    }
+                }
+            }
+            
+            itinerary = suggestions;
+            displayItinerary();
+        }
+
+        function addToItinerary(itemId) {
+            const allItems = hotelsData.concat(touristPlaces).concat(worshipPlaces);
+            const item = allItems.find(function(i) { return i.id === itemId; });
+            if (item && !itinerary.find(function(i) { return i.id === itemId; })) {
+                itinerary.push(item);
+                displayItinerary();
+            }
+        }
+
+        function displayItinerary() {
+            const itineraryList = document.getElementById('itineraryList');
+            const itineraryItems = document.getElementById('itineraryItems');
+            const itineraryCount = document.getElementById('itineraryCount');
+            
+            if (itinerary.length === 0) {
+                itineraryList.style.display = 'none';
+                return;
+            }
+            
+            itineraryList.style.display = 'block';
+            itineraryCount.textContent = itinerary.length;
+            
+            let html = '';
+            itinerary.forEach(function(item, idx) {
+                html += '<div class="itinerary-item">';
+                html += '<div style="flex: 1;">';
+                html += '<div class="font-medium text-sm">Day ' + (Math.floor(idx / 2) + 1) + ': ' + item.name + '</div>';
+                html += '<div class="text-xs" style="color: #666;">' + item.area + '</div>';
+                html += '</div>';
+                html += '<button class="btn-danger" onclick="removeFromItinerary(\'' + item.id + '\')">✕</button>';
+                html += '</div>';
+            });
+            
+            itineraryItems.innerHTML = html;
+            
+            // Draw route on map
+            layers.itinerary.clearLayers();
+            if (itinerary.length > 1) {
+                const coords = itinerary.map(function(item) { return item.coordinates; });
+                const polyline = L.polyline(coords, {
+                    color: '#F57C00',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10'
+                });
+                layers.itinerary.addLayer(polyline);
+            }
+        }
+
+        function removeFromItinerary(itemId) {
+            itinerary = itinerary.filter(function(i) { return i.id !== itemId; });
+            displayItinerary();
+        }
+
+        function clearItinerary() {
+            itinerary = [];
+            displayItinerary();
+        }
+
+        function submitFeedback() {
+            const place = document.getElementById('feedbackPlace').value;
+            const rating = document.getElementById('feedbackRating').value;
+            const comments = document.getElementById('feedbackComments').value;
+            
+            if (place) {
+                alert('Feedback submitted! Thank you for helping improve tourism.');
+                document.getElementById('feedbackPlace').value = '';
+                document.getElementById('feedbackRating').value = 'clean';
+                document.getElementById('feedbackComments').value = '';
+            } else {
+                alert('Please enter a place name.');
+            }
+        }
+
+        // Initialize legend
+        updateLegend();
+    </script>
+</body>
+</html>
